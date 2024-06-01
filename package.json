@@ -1,0 +1,94 @@
+{
+  "name": "react-desktop-heron",
+  "version": "6.0.0",
+  "private": true,
+  "main": "public/electron.js",
+  "type": "module",
+  "homepage": "./",
+  "author": {
+    "name": "Vitor Vargas",
+    "email": "vitorrodriguesvargas@gmailc.om"
+  },
+  "description": "Heron Oficina App",
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.6.7",
+    "electron-is-dev": "^3.0.1",
+    "kill-port": "^2.0.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "react-input-mask": "^2.0.4",
+    "react-modal": "^3.16.1",
+    "react-router-dom": "^6.23.0",
+    "react-scripts": "^5.0.1",
+    "react-toastify": "^10.0.4",
+    "styled-components": "^6.1.8",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd api && npm start",
+    "client": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "electron": "electron .",
+    "electron-prod": "set NODE_ENV=production && concurrently \"npm run server\" \"npm run electron\"",
+    "electron:package:win": "npm run build && electron-builder"
+  },
+  "build": {
+    "appId": "com.heron-oficina-app",
+    "productName": "Heron-App",
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "public/electron.js",
+      "api/**/*"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "extraResources": [
+      {
+        "from": "build/",
+        "to": "build/",
+        "filter": [
+          "**/*"
+        ]
+      },
+      {
+        "from": "api/",
+        "to": "api/",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ]
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.8",
+    "electron-builder": "^24.13.3"
+  }
+}
