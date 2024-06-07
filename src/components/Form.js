@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import { FaTools, FaTrash } from "react-icons/fa";
@@ -54,13 +54,23 @@ const Button = styled.button`
 
 const Form = ({ getUsers, onEdit, setOnEdit}) => {
     const ref = useRef();
-    const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
-    //const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [pecas, setPecas] = useState([]);
     const [telefone, setTelefone] = useState('');
+    const [totalPrice, setTotalPrice] = useState('0.00');
 
     
     const API_URL = "http://localhost:8800";
+
+
+    const calculateTotalPrice = useCallback(() => {
+        const total = pecas.reduce((acc, peca) => {
+            const price = parseFloat(peca.preco.replace(',', '.'));
+            return acc + (isNaN(price) ? 0 : price);
+        }, 0);
+        return total.toFixed(2);
+    }, [pecas]);
+    
 
     // Função para abrir o modal
     const handleOpenModal = () => {
@@ -72,20 +82,43 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
         setIsModalOpen(false);
     };
     
+    const handleFormatPrice = (id, valor) => {
+        // Remove caracteres não numéricos exceto ponto e vírgula
+        valor = valor.replace(/[^0-9.,]+/g, '');
+        // Substitui vírgula por ponto para conversão
+        valor = valor.replace(',', '.');
+        // Converte para float e formata para duas casas decimais
+        const numericValue = parseFloat(valor);
+        if (!isNaN(numericValue)) {
+            valor = numericValue.toFixed(2);
+        } else {
+            valor = ''; // Se não for um número válido, limpa o campo
+        }
+        return valor;
+    };
 
     const handleAddPeca = () => {
         const novaPeca = {
             id: Math.random(), // em um app real, o ID seria gerado de outra forma
             nome: "",
             quantidade: 1,
+            preco: "0.00"
         };
         setPecas([...pecas, novaPeca]);
     };
+
 
     const handleUpdatePeca = (id, campo, valor) => {
         setPecas(pecas.map(peca =>
             peca.id === id ? { ...peca, [campo]: valor } : peca
         ));
+    };
+
+    const handleBlurPeca = (id, campo, valor) => {
+        if (campo === "preco") {
+            valor = handleFormatPrice(id, valor);
+        }
+        handleUpdatePeca(id, campo, valor);
     };
 
     const handleRemovePeca = (id) => {
@@ -103,6 +136,7 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
 
     useEffect(() => {
 
+
         if (onEdit) {
             const user = ref.current;
 
@@ -119,16 +153,19 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                 setPecas(JSON.parse(onEdit.pecas));
             }
         }
-    }, [onEdit]);
+        setTotalPrice(calculateTotalPrice());
+    }, [onEdit, calculateTotalPrice]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const totalPreco = calculateTotalPrice();
 
 
         
         const user = ref.current;
         const pecasAsString = JSON.stringify(pecas);
-        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0);
+        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0 && peca.preco > 0);
 
         //setIsSaveEnabled(isAnyPecaValid);
 
@@ -163,7 +200,8 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             data: user.data.value,
             preco: user.preco.value,
             status: user.status.value,
-            pecas: pecasAsString
+            pecas: pecasAsString,
+            totalPreco: totalPreco
         };
 
         try {
@@ -252,6 +290,14 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                                     value={peca.nome}
                                     onChange={(e) => handleUpdatePeca(peca.id, "nome", e.target.value)}
                                     placeholder="Digite o Nome da peça"
+                                    className="input-peca"
+                                />
+                                <input
+                                    type="text"
+                                    value={peca.preco}
+                                    onChange={(e) => handleUpdatePeca(peca.id, "preco", e.target.value)}
+                                    onBlur={(e) => handleBlurPeca(peca.id, "preco", e.target.value)}
+                                    placeholder="Digite o preco da peça"
                                     className="input-peca"
                                 />
                                 

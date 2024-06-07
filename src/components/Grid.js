@@ -5,6 +5,7 @@ import { FaTrash, FaEdit, FaTools, FaRegWindowClose } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Modal from 'react-modal';
 import '../styles/modal.css';
+import '../styles/modal-peca.js';
 
 const SearchBarContainer = styled.div`
   display: flex;
@@ -94,7 +95,7 @@ const ToolsIcon = styled(FaTools)`
   }
 `;
 
-// Tabela do Modal //
+// Tabela do Modal  de pecas //
 
 const TableWrapper = styled.div`
   border: 1px solid #ccc;
@@ -305,15 +306,17 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                     <StyledTable>
                         <StyledThead>
                             <tr>
-                                <StyledTh>Nome</StyledTh>
+                                <StyledTh>Produto</StyledTh>
                                 <StyledTh>Quantidade</StyledTh>
+                                <StyledTh>Preco</StyledTh>
                             </tr>
                         </StyledThead>
                         <ScrollableTbody>
                             {pecasArray.map((peca, index) => (
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
-                                    <StyledTd>{peca.quantidade}</StyledTd>
+                                    <StyledTd>{peca.totalPreco}</StyledTd>
+                                    <StyledTd>{peca.preco}</StyledTd>
                                 </StyledTr>
                             ))}
                         </ScrollableTbody>
