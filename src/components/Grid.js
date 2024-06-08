@@ -182,7 +182,7 @@ const ConfirmationModalEdit = ({ isOpen, onClose, onConfirm, itemToEdit}) => (
     </Modal>
 );
 
-const Grid = ({ users, setUsers, setOnEdit}) => {
+const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
 
     // Verificação de segurança para garantir que `users` não seja undefined
   if (!users) {
@@ -315,7 +315,7 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                             {pecasArray.map((peca, index) => (
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
-                                    <StyledTd>{peca.totalPreco}</StyledTd>
+                                    <StyledTd>{peca.quantidade}</StyledTd>
                                     <StyledTd>{peca.preco}</StyledTd>
                                 </StyledTr>
                             ))}
@@ -368,7 +368,7 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                             <Td width="15%">{item.modelo}</Td>
                             <Td width="10%">{item.ano}</Td>
                             <Td width="10%">{item.data}</Td>
-                            <Td width="10%">{item.preco}</Td>
+                            <Td width="10%">{item.totalPreco}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
                                 <EditIcon onClick={() => openConfirmModalEdit(item)} />
@@ -407,8 +407,9 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                                 <li>Modelo: {selectedItem.modelo}</li>
                                 <li>Ano: {selectedItem.ano}</li>
                                 <li>Data: {selectedItem.data}</li>
-                                <li>Preco: {selectedItem.preco}</li>
                                 <li>Status: {selectedItem.status}</li>
+                                <li>Mão de Obra: {selectedItem.maodeobra}</li>
+                                <li>Total: {selectedItem.totalPreco}</li>
                             </ul>
                         </div>
                         <div style={{ flex: '1', justifyContent: 'center' }}>

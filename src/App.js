@@ -41,6 +41,7 @@ function App() {
   const [users, setUsers] = useState([]);
   const [onEdit, setOnEdit] = useState(null);
   const [isLoggedIn, setLoggedIn] = useState(false);
+  const [totalPreco, setTotalPreco] = useState('0.00');
 
   const getUsers = async () => {
     try {
@@ -71,8 +72,8 @@ function App() {
         <div>
           <Container>
             <Title>REGISTROS</Title>
-            <Form onEdit={onEdit} setOnEdit={setOnEdit} getUsers={getUsers} />
-            <Grid users={users} setUsers={setUsers} setOnEdit={setOnEdit} onEdit={onEdit} />
+            <Form onEdit={onEdit} setOnEdit={setOnEdit} getUsers={getUsers} setTotalPreco={setTotalPreco}/>
+            <Grid users={users} setUsers={setUsers} setOnEdit={setOnEdit} onEdit={onEdit}  totalPreco={totalPreco}/>
           </Container>
           <LogoutButton onClick={handleLogout}>Sair</LogoutButton>
           <ToastContainer autoClose={3000} />

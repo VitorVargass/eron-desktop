@@ -52,7 +52,7 @@ const Button = styled.button`
     height: 42px;
 `;
 
-const Form = ({ getUsers, onEdit, setOnEdit}) => {
+const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
     const ref = useRef();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [pecas, setPecas] = useState([]);
@@ -146,20 +146,27 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             user.modelo.value = onEdit.modelo;
             user.ano.value = onEdit.ano;
             user.data.value = onEdit.data;
-            user.preco.value = onEdit.preco;
             user.status.value = onEdit.status;
             
             if (onEdit.pecas && typeof onEdit.pecas === 'string') {
                 setPecas(JSON.parse(onEdit.pecas));
-            }
+            }   
         }
+    }, [onEdit]);
+
+    //controla o estado do calculo de preco total com useEffect
+    useEffect(() => {
+        
+        console.log('Total Price:', calculateTotalPrice());
+        // Este useEffect reage apenas à mudança nas peças
         setTotalPrice(calculateTotalPrice());
-    }, [onEdit, calculateTotalPrice]);
+    }, [pecas, calculateTotalPrice]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         const totalPreco = calculateTotalPrice();
+        setTotalPreco(totalPreco);
 
 
         
@@ -182,7 +189,6 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             !user.modelo.value ||
             !user.ano.value ||
             !user.data.value ||
-            !user.preco.value ||
             !user.status.value) {
             return toast.warn("Preencha todos os campos!");
         };
@@ -198,10 +204,9 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             modelo: user.modelo.value,
             ano: user.ano.value,
             data: user.data.value,
-            preco: user.preco.value,
             status: user.status.value,
             pecas: pecasAsString,
-            totalPreco: totalPreco
+            totalPreco: totalPreco,
         };
 
         try {
@@ -222,7 +227,6 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
         user.modelo.value = "";
         user.ano.value = "";
         user.data.value = "";
-        user.preco.value = "";
         user.status.value = "";
         setPecas([]);
         setOnEdit(null);
@@ -264,10 +268,6 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                 <InputArea>
                     <Label>Data:</Label>
                     <Input name="data" type="text" placeholder="Digite a data"/>
-                </InputArea>
-                <InputArea>
-                    <Label>Preco:</Label>
-                    <Input name="preco" type="text" placeholder="Digite o preco"/>
                 </InputArea>
                 <InputArea>
                     <Label>Status:</Label>
