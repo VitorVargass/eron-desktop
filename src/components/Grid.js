@@ -100,10 +100,12 @@ const ToolsIcon = styled(FaTools)`
 const TableWrapper = styled.div`
   border: 1px solid #ccc;
   overflow-x: auto;
+  height: 400px;
 `;
 
 const StyledTable = styled.table`
   width: 100%;
+  height: 350px;
   table-layout: fixed;
 `;
 
@@ -114,15 +116,15 @@ const StyledThead = styled.thead`
 `;
 
 const StyledTh = styled.th`
-  text-align: left;
+  text-align: center;
   padding: 8px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid black;
   font-weight: normal;
 `;
 
 const ScrollableTbody = styled.tbody`
   display: block;
-  max-height: 200px; /* ou qualquer que seja a altura desejada */
+  max-height: 350px; /* ou qualquer que seja a altura desejada */
   overflow-y: auto;
   overflow-x: hidden;
 `;
@@ -131,7 +133,7 @@ const StyledTd = styled.td`
   text-align: center;
   padding: 8px;
   border-bottom: 1px solid #ddd;
-  width: 100%;
+  width: 172px;
 `;
 
 const StyledTr = styled.tr`
@@ -196,7 +198,6 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     const [confirmModalEditOpen, setConfirmModalEditOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [itemToEdit, setItemToEdit] = useState(null);
-    //const [isEditing, setIsEditing] = useState(false);
 
     const API_URL = "http://localhost:8800";
 
@@ -403,23 +404,28 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: '1' }}>
                             <ul>
-                                <li>Cliente: {selectedItem.cliente}</li>
-                                <li>Telefone: {selectedItem.telefone}</li>
-                                <li>Marca: {selectedItem.marca}</li>
-                                <li>Modelo: {selectedItem.modelo}</li>
-                                <li>Ano: {selectedItem.ano}</li>
-                                <li>Placa: {selectedItem.placa}</li>
-                                <li>Data: {selectedItem.data}</li>
-                                <li>Status: {selectedItem.status}</li>
-                                <li>Mão de Obra: {selectedItem.maoDeObra}</li>
-                                <li>Custo de pecas: {selectedItem.totalPreco - selectedItem.maoDeObra}</li>
-                                <li>Total: {selectedItem.totalPreco}</li>
+                                <li className="info-modal">Cliente: {selectedItem.cliente}</li>
+                                <li className="info-modal">Telefone: {selectedItem.telefone}</li>
+                                <li className="info-modal">Marca: {selectedItem.marca}</li>
+                                <li className="info-modal">Modelo: {selectedItem.modelo}</li>
+                                <li className="info-modal">Ano: {selectedItem.ano}</li>
+                                <li className="info-modal">Placa: {selectedItem.placa}</li>
+                                <li className="info-modal">Data: {selectedItem.data}</li>
+                                <li className="info-modal">Status: {selectedItem.status}</li>
+                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra}</li>
+                                <li className="info-modal">Custo de pecas: { (selectedItem.totalPreco - selectedItem.maoDeObra).toFixed(2) }</li>
+                                <li className="info-modal">Total: {selectedItem.totalPreco}</li>
                             </ul>
                         </div>
-                        <div style={{ flex: '1', justifyContent: 'center' }}>
+                        
+                        <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
+                            <button className="btn-impressao">Fazer Dowload de Ordem de Serviço</button>
+                            <button className="btn-impressao">Imprimir Ordem de Serviço</button>
                         </div>
+                        
                     </div>
+                    
                 )}
 
             </Modal>

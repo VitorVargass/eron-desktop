@@ -9,7 +9,8 @@
 }
 
 .modal-content {
-    width: 30%;
+    width: 60%;
+    height: 70vh;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -44,9 +45,31 @@ li {
     cursor: pointer;
     color: red;
 }
+.info-modal {
+  margin: 10px 0px;
+  padding: 5px;
+  border: solid #ccc 1px;
+  border-radius: 10px;
+  width: 100%;
+  font-size: 18px;
+  background-color: #2c73d2;
+  color: white;
+}
+.btn-impressao {
+  width: 60%;
+  height: 50px;
+  background-color: #2c73d2;
+  border: solid #ccc 1px;
+  border-radius: 10px;
+  margin: 10px 0px;
+  color: white;
+}
+.btn-impressao:hover {
+  background-color: #1c5da7;
+  cursor: pointer;
+}
 
-/*---------------------------------------------------------------------------*/
-
+/*--------------------------MODAL DE PECAS --------------------------------*/
 .modal-peca {
     display: flex;
     flex-direction: column;
@@ -114,7 +137,7 @@ li {
     font-size: 20px;
     margin: 0px 5px;
 }
-/* Modal Confirmacao */
+/*--------------------------MODAL DE CONFIRMACAO --------------------------------*/
 
 .modal-confirmacao {
   position: absolute;
