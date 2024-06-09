@@ -5,6 +5,7 @@ import { FaTrash, FaEdit, FaTools, FaRegWindowClose } from "react-icons/fa";
 import { toast } from "react-toastify";
 import Modal from 'react-modal';
 import '../styles/modal.css';
+import '../styles/modal-peca.js';
 
 const SearchBarContainer = styled.div`
   display: flex;
@@ -94,15 +95,17 @@ const ToolsIcon = styled(FaTools)`
   }
 `;
 
-// Tabela do Modal //
+// Tabela do Modal  de pecas //
 
 const TableWrapper = styled.div`
   border: 1px solid #ccc;
   overflow-x: auto;
+  height: 400px;
 `;
 
 const StyledTable = styled.table`
   width: 100%;
+  height: 350px;
   table-layout: fixed;
 `;
 
@@ -113,15 +116,15 @@ const StyledThead = styled.thead`
 `;
 
 const StyledTh = styled.th`
-  text-align: left;
+  text-align: center;
   padding: 8px;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid black;
   font-weight: normal;
 `;
 
 const ScrollableTbody = styled.tbody`
   display: block;
-  max-height: 200px; /* ou qualquer que seja a altura desejada */
+  max-height: 350px; /* ou qualquer que seja a altura desejada */
   overflow-y: auto;
   overflow-x: hidden;
 `;
@@ -130,7 +133,7 @@ const StyledTd = styled.td`
   text-align: center;
   padding: 8px;
   border-bottom: 1px solid #ddd;
-  width: 100%;
+  width: 172px;
 `;
 
 const StyledTr = styled.tr`
@@ -181,7 +184,7 @@ const ConfirmationModalEdit = ({ isOpen, onClose, onConfirm, itemToEdit}) => (
     </Modal>
 );
 
-const Grid = ({ users, setUsers, setOnEdit}) => {
+const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
 
     // Verificação de segurança para garantir que `users` não seja undefined
   if (!users) {
@@ -195,7 +198,6 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
     const [confirmModalEditOpen, setConfirmModalEditOpen] = useState(false);
     const [itemToDelete, setItemToDelete] = useState(null);
     const [itemToEdit, setItemToEdit] = useState(null);
-    //const [isEditing, setIsEditing] = useState(false);
 
     const API_URL = "http://localhost:8800";
 
@@ -305,8 +307,9 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                     <StyledTable>
                         <StyledThead>
                             <tr>
-                                <StyledTh>Nome</StyledTh>
+                                <StyledTh>Produto</StyledTh>
                                 <StyledTh>Quantidade</StyledTh>
+                                <StyledTh>Preco</StyledTh>
                             </tr>
                         </StyledThead>
                         <ScrollableTbody>
@@ -314,6 +317,7 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
                                     <StyledTd>{peca.quantidade}</StyledTd>
+                                    <StyledTd>{peca.preco}</StyledTd>
                                 </StyledTr>
                             ))}
                         </ScrollableTbody>
@@ -347,6 +351,7 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                         <Th width="15%">Marca</Th>
                         <Th width="15%" $onlyWeb>Modelo/Versão</Th>
                         <Th width="10%">Ano</Th>
+                        <Th width="10%">Placa</Th>
                         <Th width="10%">Data</Th>
                         <Th width="10%">Preco</Th>
                         <Th width="10%">Status</Th>
@@ -365,7 +370,8 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                             <Td width="15%">{item.modelo}</Td>
                             <Td width="10%">{item.ano}</Td>
                             <Td width="10%">{item.data}</Td>
-                            <Td width="10%">{item.preco}</Td>
+                            <Td width="10%">{item.placa}</Td>
+                            <Td width="10%">{item.totalPreco}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
                                 <EditIcon onClick={() => openConfirmModalEdit(item)} />
@@ -398,20 +404,28 @@ const Grid = ({ users, setUsers, setOnEdit}) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div style={{ flex: '1' }}>
                             <ul>
-                                <li>Cliente: {selectedItem.cliente}</li>
-                                <li>Telefone: {selectedItem.telefone}</li>
-                                <li>Marca: {selectedItem.marca}</li>
-                                <li>Modelo: {selectedItem.modelo}</li>
-                                <li>Ano: {selectedItem.ano}</li>
-                                <li>Data: {selectedItem.data}</li>
-                                <li>Preco: {selectedItem.preco}</li>
-                                <li>Status: {selectedItem.status}</li>
+                                <li className="info-modal">Cliente: {selectedItem.cliente}</li>
+                                <li className="info-modal">Telefone: {selectedItem.telefone}</li>
+                                <li className="info-modal">Marca: {selectedItem.marca}</li>
+                                <li className="info-modal">Modelo: {selectedItem.modelo}</li>
+                                <li className="info-modal">Ano: {selectedItem.ano}</li>
+                                <li className="info-modal">Placa: {selectedItem.placa}</li>
+                                <li className="info-modal">Data: {selectedItem.data}</li>
+                                <li className="info-modal">Status: {selectedItem.status}</li>
+                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra}</li>
+                                <li className="info-modal">Custo de pecas: { (selectedItem.totalPreco - selectedItem.maoDeObra).toFixed(2) }</li>
+                                <li className="info-modal">Total: {selectedItem.totalPreco}</li>
                             </ul>
                         </div>
-                        <div style={{ flex: '1', justifyContent: 'center' }}>
+                        
+                        <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
+                            <button className="btn-impressao">Fazer Dowload de Ordem de Serviço</button>
+                            <button className="btn-impressao">Imprimir Ordem de Serviço</button>
                         </div>
+                        
                     </div>
+                    
                 )}
 
             </Modal>

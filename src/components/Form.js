@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback } from "react";
 import styled from "styled-components";
 import { toast } from "react-toastify";
 import { FaTools, FaTrash } from "react-icons/fa";
@@ -52,15 +52,26 @@ const Button = styled.button`
     height: 42px;
 `;
 
-const Form = ({ getUsers, onEdit, setOnEdit}) => {
+const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
     const ref = useRef();
-    const [isModalOpen, setIsModalOpen] = useState(false); // Estado para controlar a visibilidade do modal
-    //const [isSaveEnabled, setIsSaveEnabled] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const [pecas, setPecas] = useState([]);
     const [telefone, setTelefone] = useState('');
+    const [totalPrice, setTotalPrice] = useState('0.00');
+    const [maoDeObra, setMaoDeObra] = useState('0.00');
 
     
     const API_URL = "http://localhost:8800";
+
+
+    const calculateTotalPrice = useCallback(() => {
+        const total = pecas.reduce((acc, peca) => {
+            const price = parseFloat(peca.preco.replace(',', '.'));
+            return acc + (isNaN(price) ? 0 : price);
+        }, 0) + parseFloat(maoDeObra.replace(',', '.'));
+        return total.toFixed(2);
+    }, [pecas, maoDeObra]);
+    
 
     // Função para abrir o modal
     const handleOpenModal = () => {
@@ -72,20 +83,41 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
         setIsModalOpen(false);
     };
     
+    const handleFormatPrice = (id, valor) => {
+        valor = valor.replace(/[^0-9.,]+/g, '');
+        valor = valor.replace(',', '.');
+        const numericValue = parseFloat(valor);
+        if (!isNaN(numericValue)) {
+            valor = numericValue.toFixed(2);
+        } else {
+            valor = '0.00';
+            console.log("Mao de Obra não é numero!")
+        }
+        return valor;
+    };
 
     const handleAddPeca = () => {
         const novaPeca = {
             id: Math.random(), // em um app real, o ID seria gerado de outra forma
             nome: "",
             quantidade: 1,
+            preco: "0.00"
         };
         setPecas([...pecas, novaPeca]);
     };
+
 
     const handleUpdatePeca = (id, campo, valor) => {
         setPecas(pecas.map(peca =>
             peca.id === id ? { ...peca, [campo]: valor } : peca
         ));
+    };
+
+    const handleBlurPeca = (id, campo, valor) => {
+        if (campo === "preco") {
+            valor = handleFormatPrice(id, valor);
+        }
+        handleUpdatePeca(id, campo, valor);
     };
 
     const handleRemovePeca = (id) => {
@@ -103,6 +135,7 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
 
     useEffect(() => {
 
+
         if (onEdit) {
             const user = ref.current;
 
@@ -111,24 +144,43 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             user.marca.value = onEdit.marca;
             user.modelo.value = onEdit.modelo;
             user.ano.value = onEdit.ano;
+            user.placa.value = onEdit.placa;
             user.data.value = onEdit.data;
-            user.preco.value = onEdit.preco;
             user.status.value = onEdit.status;
+            
+            if (onEdit.maoDeObra) {
+                setMaoDeObra(onEdit.maoDeObra); // Aqui está a correção
+            } else {
+                setMaoDeObra('0.00'); // Aqui está a correção
+            }
             
             if (onEdit.pecas && typeof onEdit.pecas === 'string') {
                 setPecas(JSON.parse(onEdit.pecas));
-            }
+            }   
+                
+            
         }
     }, [onEdit]);
 
+    //controla o estado do calculo de preco total com useEffect
+    useEffect(() => {
+        
+        console.log('Total Price:', calculateTotalPrice());
+        // Este useEffect reage apenas à mudança nas peças
+        setTotalPrice(calculateTotalPrice());
+    }, [pecas, maoDeObra, calculateTotalPrice]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const totalPreco = calculateTotalPrice();
+        setTotalPreco(totalPreco);
 
 
         
         const user = ref.current;
         const pecasAsString = JSON.stringify(pecas);
-        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0);
+        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0 && peca.preco > 0);
 
         //setIsSaveEnabled(isAnyPecaValid);
 
@@ -144,9 +196,10 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             !user.marca.value ||
             !user.modelo.value ||
             !user.ano.value ||
+            !user.placa.value ||
             !user.data.value ||
-            !user.preco.value ||
-            !user.status.value) {
+            !user.status.value ||
+            !maoDeObra) {
             return toast.warn("Preencha todos os campos!");
         };
         if (!isAnyPecaValid) {
@@ -160,10 +213,12 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
             marca: user.marca.value,
             modelo: user.modelo.value,
             ano: user.ano.value,
+            placa: user.placa.value,
             data: user.data.value,
-            preco: user.preco.value,
             status: user.status.value,
-            pecas: pecasAsString
+            pecas: pecasAsString,
+            maoDeObra: maoDeObra,
+            totalPreco: totalPreco
         };
 
         try {
@@ -183,10 +238,11 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
         user.marca.value = "";
         user.modelo.value = "";
         user.ano.value = "";
+        user.placa.value = "";
         user.data.value = "";
-        user.preco.value = "";
         user.status.value = "";
         setPecas([]);
+        setMaoDeObra('0.00');
         setOnEdit(null);
         getUsers();
     } catch (error) {
@@ -224,12 +280,12 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                     <Input name="ano" placeholder="Digite o ano"/>
                 </InputArea>
                 <InputArea>
-                    <Label>Data:</Label>
-                    <Input name="data" type="text" placeholder="Digite a data"/>
+                    <Label>Placa:</Label>
+                    <Input name="placa" type="text" placeholder="Digite a placa"/>
                 </InputArea>
                 <InputArea>
-                    <Label>Preco:</Label>
-                    <Input name="preco" type="text" placeholder="Digite o preco"/>
+                    <Label>Data:</Label>
+                    <Input name="data" type="text" placeholder="Digite a data"/>
                 </InputArea>
                 <InputArea>
                     <Label>Status:</Label>
@@ -254,6 +310,14 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                                     placeholder="Digite o Nome da peça"
                                     className="input-peca"
                                 />
+                                <input
+                                    type="text"
+                                    value={peca.preco}
+                                    onChange={(e) => handleUpdatePeca(peca.id, "preco", e.target.value)}
+                                    onBlur={(e) => handleBlurPeca(peca.id, "preco", e.target.value)}
+                                    placeholder="Digite o preco da peça"
+                                    className="input-peca"
+                                />
                                 
                                 <button onClick={() => handleDecrementQuantidade(peca.id)} className="buttons-quant">-</button>
                                 <span className="number">{peca.quantidade}</span>
@@ -262,7 +326,17 @@ const Form = ({ getUsers, onEdit, setOnEdit}) => {
                                 
                             </div>
                         ))}
-                        
+                        <div>
+                            <label>Mão de Obra:</label>
+                            <input
+                                type="number"
+                                value={maoDeObra}
+                                name="maoDeObra"
+                                onChange={(e) => setMaoDeObra(e.target.value)}
+                                placeholder="Digite o valor da mão de obra"
+                                className="input-peca"
+                            />
+                        </div>
                         <div className="buttons-low">
                         <button onClick={handleAddPeca} className="add-button">Adicionar Peça</button>
                         <button className="add-button" onClick={handleCloseModal} >Concluir</button>
