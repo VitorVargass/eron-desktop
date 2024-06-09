@@ -134,7 +134,7 @@ const StyledTd = styled.td`
   text-align: center;
   padding: 8px;
   border-bottom: 1px solid #ddd;
-  width: 172px;
+  width: 100%;
 `;
 
 const StyledTr = styled.tr`
@@ -398,7 +398,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                     toast.error("Erro ao formatar preço.");
                 }
             });
-            doc.save('ordem-servico.pdf');
+            doc.save(`${selectedItem.cliente}.pdf`);
         } else {
             console.error("Peças não estão em formato de array");
             toast.error("Dados das peças não estão no formato correto.");
@@ -409,25 +409,32 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
 
     //IMPRIMIR PDF 
 
-    const printPDF = () => {
-        const doc = generatePDF(); // Esta função retorna a instância jsPDF
+     const printPDF = () => {
+         const doc = generatePDF(); // Esta função retorna a instância jsPDF
     
-        if (doc) {
-        // Abre o PDF em uma nova janela para impressão
-        const pdfUrl = doc.output('datauristring'); // Gera o URL do PDF
+         if (doc) {
+            // Gera o PDF como um Blob
+            const pdfBlob = doc.output('blob');
     
-        // Abrir uma nova janela e carregar o PDF para impressão
-        const printWindow = window.open(pdfUrl, '_blank');
-        printWindow.focus();
+            // Cria um URL para o Blob
+            const blobUrl = URL.createObjectURL(pdfBlob);
     
-        // Aguarda o carregamento da nova janela e dispara a impressão
-        printWindow.onload = function() {
-            printWindow.print();
-        };
+            // Abre uma nova janela e carrega o PDF para impressão
+            const printWindow = window.open('', '_blank');
+            if (printWindow) {
+                printWindow.document.write(`<iframe src="${blobUrl}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`);
+                
+                // Aguarda o carregamento da nova janela e dispara a impressão
+                printWindow.onload = function() {
+                    printWindow.print();
+                };
+            } else {
+                console.error('Failed to open print window.');
+            }
         } else {
             console.error('Failed to generate PDF document.');
         }
-    }
+     }
 
 
 

@@ -164,8 +164,6 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
 
     //controla o estado do calculo de preco total com useEffect
     useEffect(() => {
-        
-        console.log('Total Price:', calculateTotalPrice());
         // Este useEffect reage apenas à mudança nas peças
         setTotalPrice(calculateTotalPrice());
     }, [pecas, maoDeObra, calculateTotalPrice]);
