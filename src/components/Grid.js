@@ -350,6 +350,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                         <Th width="15%">Marca</Th>
                         <Th width="15%" $onlyWeb>Modelo/Versão</Th>
                         <Th width="10%">Ano</Th>
+                        <Th width="10%">Placa</Th>
                         <Th width="10%">Data</Th>
                         <Th width="10%">Preco</Th>
                         <Th width="10%">Status</Th>
@@ -368,6 +369,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <Td width="15%">{item.modelo}</Td>
                             <Td width="10%">{item.ano}</Td>
                             <Td width="10%">{item.data}</Td>
+                            <Td width="10%">{item.placa}</Td>
                             <Td width="10%">{item.totalPreco}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
@@ -406,9 +408,11 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <li>Marca: {selectedItem.marca}</li>
                                 <li>Modelo: {selectedItem.modelo}</li>
                                 <li>Ano: {selectedItem.ano}</li>
+                                <li>Placa: {selectedItem.placa}</li>
                                 <li>Data: {selectedItem.data}</li>
                                 <li>Status: {selectedItem.status}</li>
-                                <li>Mão de Obra: {selectedItem.maodeobra}</li>
+                                <li>Mão de Obra: {selectedItem.maoDeObra}</li>
+                                <li>Custo de pecas: {selectedItem.totalPreco - selectedItem.maoDeObra}</li>
                                 <li>Total: {selectedItem.totalPreco}</li>
                             </ul>
                         </div>

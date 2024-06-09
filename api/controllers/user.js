@@ -11,7 +11,7 @@ export const getUsers = (_, res) => {
 };
 
 export const addUser = (req, res) => {
-    const q = "INSERT INTO usuarios(`cliente`, `telefone`, `marca`, `modelo`,`ano`, `data`, `totalPreco`, `status`,`pecas`) VALUES (?)";
+    const q = "INSERT INTO usuarios(`cliente`, `telefone`, `marca`, `modelo`,`ano`, `placa`, `data`, `totalPreco`, `maoDeObra`, `status`,`pecas`) VALUES (?)";
 
     const values = [
         req.body.cliente,
@@ -19,8 +19,10 @@ export const addUser = (req, res) => {
         req.body.marca,
         req.body.modelo,
         req.body.ano,
+        req.body.placa,
         req.body.data,
         req.body.totalPreco,
+        req.body.maoDeObra,
         req.body.status,
         req.body.pecas
     ];
@@ -33,7 +35,7 @@ export const addUser = (req, res) => {
 };
 
 export const updateUser = (req, res) => {
-    const q = "UPDATE usuarios SET `cliente` = ?,  `telefone` = ?, `marca` = ?, `modelo` = ?,`ano` = ?,  `data` = ?, `totalPreco` = ?, `status` = ?, `pecas` = ? WHERE  `id` = ?";
+    const q = "UPDATE usuarios SET `cliente` = ?,  `telefone` = ?, `marca` = ?, `modelo` = ?,`ano` = ?, `placa` = ?, `data` = ?, `totalPreco` = ?, `maoDeObra` = ?, `status` = ?, `pecas` = ? WHERE  `id` = ?";
 
     const values = [
         req.body.cliente,
@@ -41,8 +43,10 @@ export const updateUser = (req, res) => {
         req.body.marca,
         req.body.modelo,
         req.body.ano,
+        req.body.placa,
         req.body.data,
         req.body.totalPreco,
+        req.body.maoDeObra,
         req.body.status,
         req.body.pecas
     ];

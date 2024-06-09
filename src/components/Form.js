@@ -58,6 +58,7 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
     const [pecas, setPecas] = useState([]);
     const [telefone, setTelefone] = useState('');
     const [totalPrice, setTotalPrice] = useState('0.00');
+    const [maoDeObra, setMaoDeObra] = useState('0.00');
 
     
     const API_URL = "http://localhost:8800";
@@ -67,9 +68,9 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         const total = pecas.reduce((acc, peca) => {
             const price = parseFloat(peca.preco.replace(',', '.'));
             return acc + (isNaN(price) ? 0 : price);
-        }, 0);
+        }, 0) + parseFloat(maoDeObra.replace(',', '.'));
         return total.toFixed(2);
-    }, [pecas]);
+    }, [pecas, maoDeObra]);
     
 
     // Função para abrir o modal
@@ -83,16 +84,14 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
     };
     
     const handleFormatPrice = (id, valor) => {
-        // Remove caracteres não numéricos exceto ponto e vírgula
         valor = valor.replace(/[^0-9.,]+/g, '');
-        // Substitui vírgula por ponto para conversão
         valor = valor.replace(',', '.');
-        // Converte para float e formata para duas casas decimais
         const numericValue = parseFloat(valor);
         if (!isNaN(numericValue)) {
             valor = numericValue.toFixed(2);
         } else {
-            valor = ''; // Se não for um número válido, limpa o campo
+            valor = '0.00';
+            console.log("Mao de Obra não é numero!")
         }
         return valor;
     };
@@ -145,12 +144,21 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             user.marca.value = onEdit.marca;
             user.modelo.value = onEdit.modelo;
             user.ano.value = onEdit.ano;
+            user.placa.value = onEdit.placa;
             user.data.value = onEdit.data;
             user.status.value = onEdit.status;
+            
+            if (onEdit.maoDeObra) {
+                setMaoDeObra(onEdit.maoDeObra); // Aqui está a correção
+            } else {
+                setMaoDeObra('0.00'); // Aqui está a correção
+            }
             
             if (onEdit.pecas && typeof onEdit.pecas === 'string') {
                 setPecas(JSON.parse(onEdit.pecas));
             }   
+                
+            
         }
     }, [onEdit]);
 
@@ -160,7 +168,7 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         console.log('Total Price:', calculateTotalPrice());
         // Este useEffect reage apenas à mudança nas peças
         setTotalPrice(calculateTotalPrice());
-    }, [pecas, calculateTotalPrice]);
+    }, [pecas, maoDeObra, calculateTotalPrice]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -188,8 +196,10 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             !user.marca.value ||
             !user.modelo.value ||
             !user.ano.value ||
+            !user.placa.value ||
             !user.data.value ||
-            !user.status.value) {
+            !user.status.value ||
+            !maoDeObra) {
             return toast.warn("Preencha todos os campos!");
         };
         if (!isAnyPecaValid) {
@@ -203,10 +213,12 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             marca: user.marca.value,
             modelo: user.modelo.value,
             ano: user.ano.value,
+            placa: user.placa.value,
             data: user.data.value,
             status: user.status.value,
             pecas: pecasAsString,
-            totalPreco: totalPreco,
+            maoDeObra: maoDeObra,
+            totalPreco: totalPreco
         };
 
         try {
@@ -226,9 +238,11 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         user.marca.value = "";
         user.modelo.value = "";
         user.ano.value = "";
+        user.placa.value = "";
         user.data.value = "";
         user.status.value = "";
         setPecas([]);
+        setMaoDeObra('0.00');
         setOnEdit(null);
         getUsers();
     } catch (error) {
@@ -264,6 +278,10 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                 <InputArea>
                     <Label>Ano:</Label>
                     <Input name="ano" placeholder="Digite o ano"/>
+                </InputArea>
+                <InputArea>
+                    <Label>Placa:</Label>
+                    <Input name="placa" type="text" placeholder="Digite a placa"/>
                 </InputArea>
                 <InputArea>
                     <Label>Data:</Label>
@@ -308,7 +326,17 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                                 
                             </div>
                         ))}
-                        
+                        <div>
+                            <label>Mão de Obra:</label>
+                            <input
+                                type="number"
+                                value={maoDeObra}
+                                name="maoDeObra"
+                                onChange={(e) => setMaoDeObra(e.target.value)}
+                                placeholder="Digite o valor da mão de obra"
+                                className="input-peca"
+                            />
+                        </div>
                         <div className="buttons-low">
                         <button onClick={handleAddPeca} className="add-button">Adicionar Peça</button>
                         <button className="add-button" onClick={handleCloseModal} >Concluir</button>
