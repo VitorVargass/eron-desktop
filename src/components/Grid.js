@@ -423,7 +423,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <li className="info-modal">Placa: {selectedItem.placa}</li>
                                 <li className="info-modal">Data: {selectedItem.data}</li>
                                 <li className="info-modal">Status: {selectedItem.status}</li>
-                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra}</li>
+                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra ? parseFloat(selectedItem.maoDeObra).toFixed(2) : '0.00'}</li>
                                 <li className="info-modal">Custo de pecas: { (selectedItem.totalPreco - selectedItem.maoDeObra).toFixed(2) }</li>
                                 <li className="info-modal">Total: {selectedItem.totalPreco}</li>
                             </ul>

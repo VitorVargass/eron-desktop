@@ -98,7 +98,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(selectedItem.maoDeObra || 'N/A', {
+        firstPage.drawText(selectedItem.maoDeObra  ? parseFloat(selectedItem.maoDeObra).toFixed(2) : '0.00' || 'N/A', {
             x: 430,
             y: height - 750,
             size: 17,
