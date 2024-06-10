@@ -1,34 +1,27 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import jsPDF from 'jspdf';
 import { toast } from "react-toastify";
+import pdfPath from '../assets/pdf-modelo.pdf'; // Caminho para o arquivo PDF
 
-// Cole a string base64 do PDF aqui (certifique-se de que está completa e correta)
-const pdfModelBase64 = "data:application/pdf;base64,JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PC9UeXBlL1BhZ2UvUGFyZW50IDIgMCBSL1Jlc291cmNlcyA0IDAgUi9NZWRpYUJveFswIDAgNTk1LjI1IDg0Mi4wNV0+PgplbmRvYmoKMiAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHMgWzEgMCBSXT4+CmVuZG9iago0IDAgb2JqCjw8L1R5cGUvUmVzb3VyY2VzL0ZvbnQ8PC9GMSA1IDAgUj4+Pj4KZW5kb2JqCjUgMCBvYmoKPDwvVHlwZS9Gb250L1N1YnR5cGUvVHlwZTEvQmFzZUZvbnQvSGVsdmV0aWNhL1RvaU5FVC9FbmNvZGluZy9XaW5BbnNpRW5jb2RpbmcvUmVnaXN0cnk8PC9OYW1lL1R5cGUgL1N0eWxlL1JlZ3VsYXIvQWx0VGV4dFBhdGhzIFsvQFszNjBdIDEyMSAwIF0gXT4+Pj4KZW5kb2JqCnhyZWYKMCA3CjAwMDAwMDAwMDAgNjU1MzUKMDAwMDAwMDAxMCAwMDAwMAowMDAwMDAwMDAyIDAwMDAwCjAwMDAwMDAwMDMgMDAwMDAKMDAwMDAwMDAwNCAwMDAwMAowMDAwMDAwMDA1IDAwMDAwCjAwMDAwMDAwMDYgMDAwMDAK..."; // Cole aqui a string base64 completa do PDF
-
-const base64ToUint8Array = (base64) => {
-    const raw = atob(base64.split(',')[1]);
-    const uint8Array = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) {
-        uint8Array[i] = raw.charCodeAt(i);
+const loadPdfTemplate = async () => {
+    try {
+        const pdfBytes = await fetch(pdfPath).then(res => res.arrayBuffer());
+        return await PDFDocument.load(pdfBytes);
+    } catch (error) {
+        console.error("Erro ao carregar o PDF modelo:", error);
+        toast.error("Erro ao carregar o PDF modelo.");
+        throw new Error("Não foi possível carregar o PDF modelo.");
     }
-    return uint8Array;
 };
 
 const generatePDF = async (selectedItem) => {
+    let pdfDoc;
     try {
-        // Converta a string base64 para um ArrayBuffer
-        const modelPdfBytes = base64ToUint8Array(pdfModelBase64).buffer;
-        const pdfDoc = await PDFDocument.load(modelPdfBytes);
-
-        // Adicione uma nova página ao PDF
-        const pages = pdfDoc.getPages();
-        const firstPage = pages[0];
-
-        // Carregar uma fonte padrão
+        // Carrega o PDF modelo
+        pdfDoc = await loadPdfTemplate();
+        const firstPage = pdfDoc.getPages()[0];
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        const { height } = firstPage.getSize();
 
-        // Definir a posição e o texto a ser adicionado
-        const { width, height } = firstPage.getSize();
         firstPage.drawText(`${selectedItem.cliente}`, {
             x: 150,
             y: height - 80,
@@ -37,83 +30,42 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        // Salve o PDF modificado como bytes
-        const modifiedPdfBytes = await pdfDoc.save();
-
-        // Carregue o PDF modificado no jsPDF
-        const doc = new jsPDF();
-        const pdfBase64 = btoa(String.fromCharCode.apply(null, new Uint8Array(modifiedPdfBytes)));
-        doc.addFileToVFS('base.pdf', pdfBase64);
-        doc.addFont('base.pdf', 'base', 'normal');
-        doc.setFont('base');
-
-        // Adicionar uma linha divisória
-        doc.setDrawColor(0);
-        doc.setFillColor(192, 192, 192);
-        doc.rect(20, 105, 170, 0.5, 'F');
-
-        // Adicionar cabeçalho da tabela de peças
-        doc.text('Produto', 20, 115);
-        doc.text('Quantidade', 90, 115);
-        doc.text('Preço', 160, 115);
-
-        let pecasArray = selectedItem.pecas;
-
-        // Verifica se pecasArray é uma string e tenta parsear para JSON
-        if (typeof pecasArray === 'string') {
-            try {
-                pecasArray = JSON.parse(pecasArray);
-            } catch (error) {
-                console.error("Erro ao parsear peças:", error);
-                toast.error("Erro ao processar dados das peças.");
-                return;
-            }
+        if (typeof selectedItem.pecas === 'string') {
+            selectedItem.pecas = JSON.parse(selectedItem.pecas);
         }
 
-        // Agora usa pecasArray como um array
-        if (Array.isArray(pecasArray)) {
+        if (Array.isArray(selectedItem.pecas)) {
             let y = 125;
-            pecasArray.forEach(peca => {
-                let precoFormatted = peca.preco;
-
-                // Checa se preco é uma string e tenta converter para número
-                if (typeof precoFormatted === 'string') {
-                    precoFormatted = parseFloat(precoFormatted);
-                }
-
-                // Só tenta usar toFixed se precoFormatted for um número
-                if (typeof precoFormatted === 'number') {
-                    doc.text(peca.nome, 20, y);
-                    doc.text(`${peca.quantidade}`, 90, y);
-                    doc.text(`R$ ${precoFormatted.toFixed(2)}`, 160, y);
-                    y += 10;
-                } else {
-                    console.error("Preço não é um número:", precoFormatted);
-                    toast.error("Erro ao formatar preço.");
-                }
+            selectedItem.pecas.forEach(peca => {
+                const precoFormatted = parseFloat(peca.preco) || 0;
+                firstPage.drawText(`${peca.nome} ${peca.quantidade} R$ ${precoFormatted.toFixed(2)}`, {
+                    x: 20,
+                    y: y,
+                    size: 10,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                y += 10;
             });
-            doc.save(`${selectedItem.cliente}.pdf`);
-        } else {
-            console.error("Peças não estão em formato de array");
-            toast.error("Dados das peças não estão no formato correto.");
         }
+
+        const modifiedPdfBytes = await pdfDoc.save();
+        return new Blob([modifiedPdfBytes], { type: 'application/pdf' });
     } catch (error) {
-        console.error("Erro ao carregar o PDF modelo:", error);
-        toast.error("Erro ao carregar o PDF modelo.");
+        console.error("Erro ao manipular o PDF:", error);
+        toast.error("Erro ao manipular o PDF.");
+        return null;
     }
 };
 
 const printPDF = async (selectedItem) => {
     try {
-        const pdfDoc = await generatePDF(selectedItem);
-
-        // Gera o PDF como um Blob
-        const pdfBlob = new Blob([pdfDoc], { type: 'application/pdf' });
-
-        // Cria um URL para o Blob
+        const pdfBlob = await generatePDF(selectedItem);
+        if (!pdfBlob) {
+            console.error('Failed to generate PDF blob.');
+            return;
+        }
         const blobUrl = URL.createObjectURL(pdfBlob);
-
-        // Abre uma nova janela e carrega o PDF para impressão
         const printWindow = window.open(blobUrl, '_blank');
         if (printWindow) {
             printWindow.onload = function() {
