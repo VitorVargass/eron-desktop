@@ -22,7 +22,11 @@ const generatePDF = async (selectedItem) => {
         const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         const { height } = firstPage.getSize();
 
-        firstPage.drawText(`${selectedItem.cliente}`, {
+        const drawText = (text, options) => {
+            firstPage.drawText(text || '', options);  // Usa string vazia se text for undefined
+        };
+
+        firstPage.drawText(selectedItem.cliente || 'N/A', {
             x: 75,
             y: height - 160,
             size: 12,
@@ -30,7 +34,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.marca}`, {
+        firstPage.drawText(selectedItem.marca || 'N/A', {
             x: 72,
             y: height - 176,
             size: 12,
@@ -38,7 +42,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.modelo}`, {
+        firstPage.drawText(selectedItem.modelo || 'N/A', {
             x: 75,
             y: height - 193,
             size: 12,
@@ -46,7 +50,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.ano}`, {
+        firstPage.drawText(selectedItem.ano || 'N/A', {
             x: 255,
             y: height - 160,
             size: 12,
@@ -54,7 +58,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.placa}`, {
+        firstPage.drawText(selectedItem.placa || 'N/A', {
             x: 260,
             y: height - 177,
             size: 12,
@@ -62,7 +66,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.telefone}`, {
+        firstPage.drawText(selectedItem.telefone || 'N/A', {
             x: 275,
             y: height - 193,
             size: 12,
@@ -70,7 +74,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.data}`, {
+        firstPage.drawText(selectedItem.data || 'N/A', {
             x: 115,
             y: height - 235,
             size: 12,
@@ -78,7 +82,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.totalPreco}`, {
+        firstPage.drawText(selectedItem.totalPreco || 'N/A', {
             x: 80,
             y: height - 523,
             size: 12,
@@ -86,7 +90,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(`${selectedItem.maoDeObra}`, {
+        firstPage.drawText(selectedItem.maoDeObra || 'N/A', {
             x: 300,
             y: height - 523,
             size: 12,
@@ -105,21 +109,21 @@ const generatePDF = async (selectedItem) => {
     });
 
     firstPage.drawText('Unid.',  {
-        x: 270,
+        x: 260,
         y: height - 260,
         size: 12,
         font,
         color: rgb(0, 0, 0),
 });
     firstPage.drawText('Quant.',  {
-        x: 310,
+        x: 300,
         y: height - 260,
         size: 12,
         font,
         color: rgb(0, 0, 0),
 });
 firstPage.drawText('Preco',  {
-    x: 360,
+    x: 350,
     y: height - 260,
     size: 12,
     font,
@@ -132,19 +136,41 @@ firstPage.drawText('Preco',  {
         }
 
         if (Array.isArray(selectedItem.pecas)) {
-            let y = 269;
+            let y = height - 272;  // Posição inicial logo abaixo dos cabeçalhos
             selectedItem.pecas.forEach(peca => {
                 const precoFormatted = parseFloat(peca.preco) || 0;
-                firstPage.drawText(`${peca.nome} ${peca.quantidade} R$ ${precoFormatted.toFixed(2)}`, {
-                    x: 25,
+                drawText(peca.nome || 'N/A', {
+                    x: 25,  // Alinha com o cabeçalho 'Produto'
                     y: y,
                     size: 10,
                     font,
                     color: rgb(0, 0, 0),
                 });
-                y += 10;
+                drawText(peca.unidade || 'N/A', {
+                    x: 260,  // Alinha com o cabeçalho 'Unid.'
+                    y: y,
+                    size: 10,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                drawText(`${peca.quantidade || 0}`, {
+                    x: 310,  // Alinha com o cabeçalho 'Quant.'
+                    y: y,
+                    size: 10,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                drawText(`R$ ${precoFormatted.toFixed(2)}`, {
+                    x: 350,  // Alinha com o cabeçalho 'Preco'
+                    y: y,
+                    size: 10,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                y -= 15;  // Move para a próxima linha abaixo
             });
         }
+        
 
         const modifiedPdfBytes = await pdfDoc.save();
         return new Blob([modifiedPdfBytes], { type: 'application/pdf' });
@@ -156,7 +182,6 @@ firstPage.drawText('Preco',  {
 };
 
 const printPDF = async (selectedItem) => {
-    console.log("Dados recebidos pela função printPDF:", selectedItem);
     try {
         const pdfBlob = await generatePDF(selectedItem);
         if (!pdfBlob) {

@@ -148,16 +148,19 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             user.data.value = onEdit.data;
             user.status.value = onEdit.status;
             
-            if (onEdit.maoDeObra) {
-                setMaoDeObra(onEdit.maoDeObra); // Aqui está a correção
+            setMaoDeObra(onEdit.maoDeObra);
+
+            if (onEdit.pecas) {
+                try {
+                    const pecasArray = typeof onEdit.pecas === 'string' ? JSON.parse(onEdit.pecas) : onEdit.pecas;
+                    setPecas(pecasArray);
+                } catch (error) {
+                    console.error("Erro ao parsear pecas:", error);
+                    toast.error("Erro ao processar dados das peças.");
+                    setPecas([]); // Define um estado seguro padrão
+                }
             } else {
-                setMaoDeObra('0.00'); // Aqui está a correção
-            }
-            
-            if (onEdit.pecas && typeof onEdit.pecas === 'string') {
-                setPecas(JSON.parse(onEdit.pecas));
-            }  else {
-                console.log("Erro ao transformar string em pecas");
+                setPecas([]);
             }
                 
             
