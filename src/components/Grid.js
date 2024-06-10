@@ -3,7 +3,7 @@ import axios from "axios";
 import styled from "styled-components";
 import { FaTrash, FaEdit, FaTools, FaRegWindowClose } from "react-icons/fa";
 import { toast } from "react-toastify";
-import { generatePDF, printPDF } from './pdf.generator.js'; 
+import {printPDF, downloadPDF } from './pdf.generator.js'; 
 import Modal from 'react-modal';
 import '../styles/modal.css';
 import '../styles/modal-peca.js';
@@ -298,9 +298,16 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     const formatPecasTable = (pecasString) => {
         let pecasArray;
 
+        if (typeof pecasString === 'string') {
+        try{
         pecasArray = JSON.parse(pecasString);
-
-
+        } catch(error) {
+        console.error("Erro ao analisar JSON:", error);
+        return <p>Erro ao analisar dados das peças.</p>;
+        } 
+    } else {
+        pecasArray = pecasString;
+    }
         // Se pecasArray é definido e é um array, então mapeia os itens para a tabela
         if (pecasArray && Array.isArray(pecasArray)) {
             return (
@@ -370,8 +377,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <Td width="15%">{item.marca}</Td>
                             <Td width="15%">{item.modelo}</Td>
                             <Td width="10%">{item.ano}</Td>
-                            <Td width="10%">{item.data}</Td>
                             <Td width="10%">{item.placa}</Td>
+                            <Td width="10%">{item.data}</Td>
                             <Td width="10%">{item.totalPreco}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
@@ -421,7 +428,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                         
                         <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
-                            <button className="btn-impressao"onClick={generatePDF}>Fazer Dowload de Ordem de Serviço</button>
+                            <button className="btn-impressao"onClick={() => downloadPDF(selectedItem)}>Fazer Dowload de Ordem de Serviço</button>
                             <button className="btn-impressao"onClick={printPDF}>Imprimir Ordem de Serviço</button>
                         </div>
                         

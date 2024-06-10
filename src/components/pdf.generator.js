@@ -23,12 +23,109 @@ const generatePDF = async (selectedItem) => {
         const { height } = firstPage.getSize();
 
         firstPage.drawText(`${selectedItem.cliente}`, {
-            x: 150,
-            y: height - 80,
+            x: 75,
+            y: height - 160,
             size: 12,
             font,
             color: rgb(0, 0, 0),
         });
+
+        firstPage.drawText(`${selectedItem.marca}`, {
+            x: 72,
+            y: height - 176,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.modelo}`, {
+            x: 75,
+            y: height - 193,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.ano}`, {
+            x: 255,
+            y: height - 160,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.placa}`, {
+            x: 260,
+            y: height - 177,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.telefone}`, {
+            x: 275,
+            y: height - 193,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.data}`, {
+            x: 115,
+            y: height - 235,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.totalPreco}`, {
+            x: 80,
+            y: height - 523,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+        firstPage.drawText(`${selectedItem.maoDeObra}`, {
+            x: 300,
+            y: height - 523,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
+
+        // Adicionar cabeçalho da tabela de peças
+        firstPage.drawText('Produto',  {
+            x: 25,
+            y: height - 260,
+            size: 12,
+            font,
+            color: rgb(0, 0, 0),
+    });
+
+    firstPage.drawText('Unid.',  {
+        x: 270,
+        y: height - 260,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+});
+    firstPage.drawText('Quant.',  {
+        x: 310,
+        y: height - 260,
+        size: 12,
+        font,
+        color: rgb(0, 0, 0),
+});
+firstPage.drawText('Preco',  {
+    x: 360,
+    y: height - 260,
+    size: 12,
+    font,
+    color: rgb(0, 0, 0),
+});
+        
 
         if (typeof selectedItem.pecas === 'string') {
             selectedItem.pecas = JSON.parse(selectedItem.pecas);
@@ -80,4 +177,25 @@ const printPDF = async (selectedItem) => {
     }
 };
 
-export { generatePDF, printPDF };
+const downloadPDF = async (selectedItem) => {
+    try {
+        const pdfBlob = await generatePDF(selectedItem);
+        if (!pdfBlob) {
+            console.error('Failed to generate PDF blob for download.');
+            toast.error('Falha ao gerar o arquivo PDF para download.');
+            return;
+        }
+        const blobUrl = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = `Ordem_de_Servico_${selectedItem.cliente}.pdf`; // Nome do arquivo PDF
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Erro ao gerar o PDF para download:', error);
+        toast.error('Erro ao gerar o PDF para download.');
+    }
+};
+
+export {printPDF, downloadPDF };
