@@ -1,6 +1,6 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { toast } from "react-toastify";
-import pdfPath from '../assets/pdf-modelo.pdf'; // Caminho para o arquivo PDF
+import pdfPath from '../assets/pdf-modelo-a4.pdf'; // Caminho para o arquivo PDF
 
 const loadPdfTemplate = async () => {
     try {
@@ -18,159 +18,172 @@ const generatePDF = async (selectedItem) => {
     try {
         // Carrega o PDF modelo
         pdfDoc = await loadPdfTemplate();
-        const firstPage = pdfDoc.getPages()[0];
-        const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-        const { height } = firstPage.getSize();
+        let firstPage = pdfDoc.getPages()[0];
+        let font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+        let { height } = firstPage.getSize();
 
         const drawText = (text, options) => {
             firstPage.drawText(text || '', options);  // Usa string vazia se text for undefined
         };
 
+
+
+        const checkAndAddPage = () => {
+            let y = height - 272;
+            if (y < 500) {  // Supõe que 50 é a margem inferior mínima antes de criar uma nova página
+                firstPage = pdfDoc.addPage();
+                height = firstPage.getSize().height;
+                y = height - 100;  // Reset y to the top of the new page
+            }
+        };
+
         firstPage.drawText(selectedItem.cliente || 'N/A', {
-            x: 75,
-            y: height - 160,
-            size: 12,
+            x: 100,
+            y: height - 228,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.marca || 'N/A', {
-            x: 72,
-            y: height - 176,
-            size: 12,
+            x: 100,
+            y: height - 252,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.modelo || 'N/A', {
-            x: 75,
-            y: height - 193,
-            size: 12,
+            x: 105,
+            y: height - 277,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.ano || 'N/A', {
-            x: 255,
-            y: height - 160,
-            size: 12,
+            x: 357,
+            y: height - 228,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.placa || 'N/A', {
-            x: 260,
-            y: height - 177,
-            size: 12,
+            x: 370,
+            y: height - 252,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.telefone || 'N/A', {
-            x: 275,
-            y: height - 193,
-            size: 12,
+            x: 390,
+            y: height - 276,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.data || 'N/A', {
-            x: 115,
-            y: height - 235,
-            size: 12,
+            x: 160,
+            y: height - 336,
+            size: 14,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.totalPreco || 'N/A', {
-            x: 80,
-            y: height - 523,
-            size: 12,
+            x: 115,
+            y: height - 750,
+            size: 17,
             font,
             color: rgb(0, 0, 0),
         });
 
         firstPage.drawText(selectedItem.maoDeObra || 'N/A', {
-            x: 300,
-            y: height - 523,
-            size: 12,
+            x: 430,
+            y: height - 750,
+            size: 17,
             font,
             color: rgb(0, 0, 0),
         });
 
 
         // Adicionar cabeçalho da tabela de peças
-        firstPage.drawText('Produto',  {
-            x: 25,
-            y: height - 260,
-            size: 12,
+        firstPage.drawText('Produto', {
+            x: 45,
+            y: height - 360,
+            size: 16,
             font,
             color: rgb(0, 0, 0),
-    });
+        });
 
-    firstPage.drawText('Unid.',  {
-        x: 260,
-        y: height - 260,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-});
-    firstPage.drawText('Quant.',  {
-        x: 300,
-        y: height - 260,
-        size: 12,
-        font,
-        color: rgb(0, 0, 0),
-});
-firstPage.drawText('Preco',  {
-    x: 350,
-    y: height - 260,
-    size: 12,
-    font,
-    color: rgb(0, 0, 0),
-});
-        
+        firstPage.drawText('Unid.', {
+            x: 390,
+            y: height - 360,
+            size: 16,
+            font,
+            color: rgb(0, 0, 0),
+        });
+        firstPage.drawText('Quant.', {
+            x: 450,
+            y: height - 360,
+            size: 16,
+            font,
+            color: rgb(0, 0, 0),
+        });
+        firstPage.drawText('Preco', {
+            x: 520,
+            y: height - 360,
+            size: 16,
+            font,
+            color: rgb(0, 0, 0),
+        });
+
 
         if (typeof selectedItem.pecas === 'string') {
             selectedItem.pecas = JSON.parse(selectedItem.pecas);
         }
 
         if (Array.isArray(selectedItem.pecas)) {
-            let y = height - 272;  // Posição inicial logo abaixo dos cabeçalhos
+            let y = height - 380;  // Posição inicial logo abaixo dos cabeçalhos
             selectedItem.pecas.forEach(peca => {
                 const precoFormatted = parseFloat(peca.preco) || 0;
+                const precoUnitarioFormat = parseFloat(peca.precoUnitario) || 0;
                 drawText(peca.nome || 'N/A', {
-                    x: 25,  // Alinha com o cabeçalho 'Produto'
+                    x: 45,  // Alinha com o cabeçalho 'Produto'
                     y: y,
-                    size: 10,
+                    size: 12,
                     font,
                     color: rgb(0, 0, 0),
                 });
-                drawText(peca.unidade || 'N/A', {
-                    x: 260,  // Alinha com o cabeçalho 'Unid.'
+                drawText(`R$ ${precoUnitarioFormat.toFixed(2)}`, {
+                    x: 380,  // Alinha com o cabeçalho 'Unid.'
                     y: y,
-                    size: 10,
+                    size: 12,
                     font,
                     color: rgb(0, 0, 0),
                 });
                 drawText(`${peca.quantidade || 0}`, {
-                    x: 310,  // Alinha com o cabeçalho 'Quant.'
+                    x: 470,  // Alinha com o cabeçalho 'Quant.'
                     y: y,
-                    size: 10,
+                    size: 12,
                     font,
                     color: rgb(0, 0, 0),
                 });
                 drawText(`R$ ${precoFormatted.toFixed(2)}`, {
-                    x: 350,  // Alinha com o cabeçalho 'Preco'
+                    x: 520,  // Alinha com o cabeçalho 'Preco'
                     y: y,
-                    size: 10,
+                    size: 12,
                     font,
                     color: rgb(0, 0, 0),
                 });
-                y -= 15;  // Move para a próxima linha abaixo
+                y -= 15;
+                checkAndAddPage(); // Move para a próxima linha abaixo
             });
         }
-        
+
 
         const modifiedPdfBytes = await pdfDoc.save();
         return new Blob([modifiedPdfBytes], { type: 'application/pdf' });
@@ -191,7 +204,7 @@ const printPDF = async (selectedItem) => {
         const blobUrl = URL.createObjectURL(pdfBlob);
         const printWindow = window.open(blobUrl, '_blank');
         if (printWindow) {
-            printWindow.onload = function() {
+            printWindow.onload = function () {
                 printWindow.print();
             };
         } else {
@@ -224,4 +237,4 @@ const downloadPDF = async (selectedItem) => {
     }
 };
 
-export {printPDF, downloadPDF };
+export { printPDF, downloadPDF };

@@ -308,6 +308,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     } else {
         pecasArray = pecasString;
     }
+    
         // Se pecasArray é definido e é um array, então mapeia os itens para a tabela
         if (pecasArray && Array.isArray(pecasArray)) {
             return (
@@ -317,6 +318,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <tr>
                                 <StyledTh>Produto</StyledTh>
                                 <StyledTh>Quantidade</StyledTh>
+                                <StyledTh>Unidade</StyledTh>
                                 <StyledTh>Preco</StyledTh>
                             </tr>
                         </StyledThead>
@@ -325,7 +327,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
                                     <StyledTd>{peca.quantidade}</StyledTd>
-                                    <StyledTd>{peca.preco}</StyledTd>
+                                    <StyledTd>{peca.precoUnitario ? parseFloat(peca.precoUnitario).toFixed(2) : '0.00'}</StyledTd>
+                                    <StyledTd>{peca.preco ? parseFloat(peca.preco).toFixed(2) : '0.00'}</StyledTd>
                                 </StyledTr>
                             ))}
                         </ScrollableTbody>
@@ -399,7 +402,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                contentLabel="Detalhes do Item"
+                contentLabel="Detalhes do Cliente"
 
                 overlayClassName="modal-overlay"
                 className="modal-content"

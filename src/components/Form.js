@@ -84,6 +84,10 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
     };
     
     const handleFormatPrice = (id, valor) => {
+
+        if (typeof valor !== 'string') {
+            valor = '0.00';
+        }
         valor = valor.replace(/[^0-9.,]+/g, '');
         valor = valor.replace(',', '.');
         const numericValue = parseFloat(valor);
@@ -101,6 +105,7 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             id: Math.random(), // em um app real, o ID seria gerado de outra forma
             nome: "",
             quantidade: 1,
+            precoUnitario: "0.00",
             preco: "0.00"
         };
         setPecas([...pecas, novaPeca]);
@@ -108,13 +113,26 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
 
 
     const handleUpdatePeca = (id, campo, valor) => {
-        setPecas(pecas.map(peca =>
-            peca.id === id ? { ...peca, [campo]: valor } : peca
-        ));
+        setPecas(pecas.map(peca => {
+            if (peca.id === id) {
+                let updatedPeca = { ...peca, [campo]: valor };
+                // Recalcular o total apenas se o campo alterado for 'precoUnitario' ou 'quantidade'
+                if (campo === 'precoUnitario' || campo === 'quantidade') {
+                    updatedPeca.preco = calculateTotal(updatedPeca.precoUnitario, updatedPeca.quantidade);
+                }
+                return updatedPeca;
+            }
+            return peca;
+        }));
+    };
+
+    const calculateTotal = (precoUnitario, quantidade) => {
+        const total = parseFloat(precoUnitario.replace(',', '.')) * quantidade;
+        return total.toFixed(2);
     };
 
     const handleBlurPeca = (id, campo, valor) => {
-        if (campo === "preco") {
+        if (campo === "precoUnitario") {
             valor = handleFormatPrice(id, valor);
         }
         handleUpdatePeca(id, campo, valor);
@@ -162,8 +180,6 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             } else {
                 setPecas([]);
             }
-                
-            
         }
     }, [onEdit]);
 
@@ -315,12 +331,13 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                                 />
                                 <input
                                     type="text"
-                                    value={peca.preco}
-                                    onChange={(e) => handleUpdatePeca(peca.id, "preco", e.target.value)}
-                                    onBlur={(e) => handleBlurPeca(peca.id, "preco", e.target.value)}
+                                    value={peca.precoUnitario}
+                                    onChange={(e) => handleUpdatePeca(peca.id, "precoUnitario", e.target.value)}
+                                    onBlur={(e) => handleBlurPeca(peca.id, "precoUnitario", e.target.value)}
                                     placeholder="Digite o preco da peça"
                                     className="input-peca"
                                 />
+                                <span className="price-display">{peca.preco || 0}</span>
                                 
                                 <button onClick={() => handleDecrementQuantidade(peca.id)} className="buttons-quant">-</button>
                                 <span className="number">{peca.quantidade}</span>
