@@ -26,7 +26,6 @@ const generatePDF = async (selectedItem) => {
         const drawText = (text, options, page = firstPage) => {
             page.drawText(text || '', options);  // Usa string vazia se text for undefined
         };
-        
 
         // Função para adicionar uma nova página
         const addNewPage = () => {
@@ -107,7 +106,6 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-
         // Adicionar cabeçalho da tabela de peças
         firstPage.drawText('Produto', {
             x: 45,
@@ -124,6 +122,7 @@ const generatePDF = async (selectedItem) => {
             font,
             color: rgb(0, 0, 0),
         });
+
         firstPage.drawText('Quant.', {
             x: 450,
             y: height - 360,
@@ -131,6 +130,7 @@ const generatePDF = async (selectedItem) => {
             font,
             color: rgb(0, 0, 0),
         });
+
         firstPage.drawText('Preco', {
             x: 520,
             y: height - 360,
@@ -139,58 +139,65 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-
         if (typeof selectedItem.pecas === 'string') {
             selectedItem.pecas = JSON.parse(selectedItem.pecas);
         }
 
         if (Array.isArray(selectedItem.pecas)) {
-            const linesPerPage = 23;  // Defina um limite de linhas por página
+            const linesPerPageFirst = 23;  // Limite de linhas para a primeira página
+            const linesPerPageSubsequent = 50;  // Limite de linhas para páginas subsequentes
             let y = height - 380;  // Posição inicial logo abaixo dos cabeçalhos
             let currentPage = firstPage;
+            let linesOnCurrentPage = 0;  // Contador de linhas na página atual
 
             selectedItem.pecas.forEach((peca, index) => {
                 const precoFormatted = parseFloat(peca.preco) || 0;
                 const precoUnitarioFormat = parseFloat(peca.precoUnitario) || 0;
 
-                if (index > 0 && index % linesPerPage === 0) {
+                const isFirstPage = currentPage === firstPage;
+                const maxLinesPerPage = isFirstPage ? linesPerPageFirst : linesPerPageSubsequent;
+
+                if (linesOnCurrentPage >= maxLinesPerPage) {
                     // Adiciona uma nova página e ajusta a posição inicial
                     currentPage = addNewPage();
                     y = height - 65;  // Posição inicial na nova página
+                    linesOnCurrentPage = 0;  // Reseta o contador de linhas
 
-                // Repetir cabeçalhos na nova página
-                currentPage.drawText('Produto', {
-                    x: 45,
-                    y: height - 50,
-                    size: 16,
-                    font,
-                    color: rgb(0, 0, 0),
-                });
+                    // Repetir cabeçalhos na nova página
+                    currentPage.drawText('Produto', {
+                        x: 45,
+                        y: height - 50,
+                        size: 16,
+                        font,
+                        color: rgb(0, 0, 0),
+                    });
 
-                currentPage.drawText('Unid.', {
-                    x: 390,
-                    y: height - 50,
-                    size: 16,
-                    font,
-                    color: rgb(0, 0, 0),
-                });
-                currentPage.drawText('Quant.', {
-                    x: 450,
-                    y: height - 50,
-                    size: 16,
-                    font,
-                    color: rgb(0, 0, 0),
-                });
-                currentPage.drawText('Preco', {
-                    x: 520,
-                    y: height - 50,
-                    size: 16,
-                    font,
-                    color: rgb(0, 0, 0),
-                });
-            }
+                    currentPage.drawText('Unid.', {
+                        x: 390,
+                        y: height - 50,
+                        size: 16,
+                        font,
+                        color: rgb(0, 0, 0),
+                    });
 
-            // linhas depois do cabecalho
+                    currentPage.drawText('Quant.', {
+                        x: 450,
+                        y: height - 50,
+                        size: 16,
+                        font,
+                        color: rgb(0, 0, 0),
+                    });
+
+                    currentPage.drawText('Preco', {
+                        x: 520,
+                        y: height - 50,
+                        size: 16,
+                        font,
+                        color: rgb(0, 0, 0),
+                    });
+                }
+
+                // linhas depois do cabecalho
                 drawText(peca.nome || 'N/A', {
                     x: 45,  // Alinha com o cabeçalho 'Produto'
                     y: y,
@@ -220,9 +227,9 @@ const generatePDF = async (selectedItem) => {
                     color: rgb(0, 0, 0),
                 }, currentPage);
                 y -= 15; // Move para a próxima linha abaixo
+                linesOnCurrentPage += 1; // Incrementa o contador de linhas na página atual
             });
         }
-
 
         const modifiedPdfBytes = await pdfDoc.save();
         return new Blob([modifiedPdfBytes], { type: 'application/pdf' });
