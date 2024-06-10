@@ -132,11 +132,11 @@ firstPage.drawText('Preco',  {
         }
 
         if (Array.isArray(selectedItem.pecas)) {
-            let y = 125;
+            let y = 269;
             selectedItem.pecas.forEach(peca => {
                 const precoFormatted = parseFloat(peca.preco) || 0;
                 firstPage.drawText(`${peca.nome} ${peca.quantidade} R$ ${precoFormatted.toFixed(2)}`, {
-                    x: 20,
+                    x: 25,
                     y: y,
                     size: 10,
                     font,
@@ -156,6 +156,7 @@ firstPage.drawText('Preco',  {
 };
 
 const printPDF = async (selectedItem) => {
+    console.log("Dados recebidos pela função printPDF:", selectedItem);
     try {
         const pdfBlob = await generatePDF(selectedItem);
         if (!pdfBlob) {

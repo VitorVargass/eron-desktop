@@ -429,7 +429,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                         <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
                             <button className="btn-impressao"onClick={() => downloadPDF(selectedItem)}>Fazer Dowload de Ordem de Serviço</button>
-                            <button className="btn-impressao"onClick={printPDF}>Imprimir Ordem de Serviço</button>
+                            <button className="btn-impressao"onClick={() => printPDF(selectedItem)}>Imprimir Ordem de Serviço</button>
                         </div>
                         
                     </div>

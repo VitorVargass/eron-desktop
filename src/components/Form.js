@@ -156,7 +156,9 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             
             if (onEdit.pecas && typeof onEdit.pecas === 'string') {
                 setPecas(JSON.parse(onEdit.pecas));
-            }   
+            }  else {
+                console.log("Erro ao transformar string em pecas");
+            }
                 
             
         }
