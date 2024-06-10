@@ -18,23 +18,21 @@ const generatePDF = async (selectedItem) => {
     try {
         // Carrega o PDF modelo
         pdfDoc = await loadPdfTemplate();
+        let pages = pdfDoc.getPages();
         let firstPage = pdfDoc.getPages()[0];
         let font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         let { height } = firstPage.getSize();
 
-        const drawText = (text, options) => {
-            firstPage.drawText(text || '', options);  // Usa string vazia se text for undefined
+        const drawText = (text, options, page = firstPage) => {
+            page.drawText(text || '', options);  // Usa string vazia se text for undefined
         };
+        
 
-
-
-        const checkAndAddPage = () => {
-            let y = height - 272;
-            if (y < 500) {  // Supõe que 50 é a margem inferior mínima antes de criar uma nova página
-                firstPage = pdfDoc.addPage();
-                height = firstPage.getSize().height;
-                y = height - 100;  // Reset y to the top of the new page
-            }
+        // Função para adicionar uma nova página
+        const addNewPage = () => {
+            const newPage = pdfDoc.addPage();
+            pages.push(newPage);
+            return newPage;
         };
 
         firstPage.drawText(selectedItem.cliente || 'N/A', {
@@ -147,40 +145,81 @@ const generatePDF = async (selectedItem) => {
         }
 
         if (Array.isArray(selectedItem.pecas)) {
+            const linesPerPage = 23;  // Defina um limite de linhas por página
             let y = height - 380;  // Posição inicial logo abaixo dos cabeçalhos
-            selectedItem.pecas.forEach(peca => {
+            let currentPage = firstPage;
+
+            selectedItem.pecas.forEach((peca, index) => {
                 const precoFormatted = parseFloat(peca.preco) || 0;
                 const precoUnitarioFormat = parseFloat(peca.precoUnitario) || 0;
+
+                if (index > 0 && index % linesPerPage === 0) {
+                    // Adiciona uma nova página e ajusta a posição inicial
+                    currentPage = addNewPage();
+                    y = height - 65;  // Posição inicial na nova página
+
+                // Repetir cabeçalhos na nova página
+                currentPage.drawText('Produto', {
+                    x: 45,
+                    y: height - 50,
+                    size: 16,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+
+                currentPage.drawText('Unid.', {
+                    x: 390,
+                    y: height - 50,
+                    size: 16,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                currentPage.drawText('Quant.', {
+                    x: 450,
+                    y: height - 50,
+                    size: 16,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+                currentPage.drawText('Preco', {
+                    x: 520,
+                    y: height - 50,
+                    size: 16,
+                    font,
+                    color: rgb(0, 0, 0),
+                });
+            }
+
+            // linhas depois do cabecalho
                 drawText(peca.nome || 'N/A', {
                     x: 45,  // Alinha com o cabeçalho 'Produto'
                     y: y,
                     size: 12,
                     font,
                     color: rgb(0, 0, 0),
-                });
+                }, currentPage);
                 drawText(`R$ ${precoUnitarioFormat.toFixed(2)}`, {
                     x: 380,  // Alinha com o cabeçalho 'Unid.'
                     y: y,
                     size: 12,
                     font,
                     color: rgb(0, 0, 0),
-                });
+                }, currentPage);
                 drawText(`${peca.quantidade || 0}`, {
                     x: 470,  // Alinha com o cabeçalho 'Quant.'
                     y: y,
                     size: 12,
                     font,
                     color: rgb(0, 0, 0),
-                });
+                }, currentPage);
                 drawText(`R$ ${precoFormatted.toFixed(2)}`, {
                     x: 520,  // Alinha com o cabeçalho 'Preco'
                     y: y,
                     size: 12,
                     font,
                     color: rgb(0, 0, 0),
-                });
-                y -= 15;
-                checkAndAddPage(); // Move para a próxima linha abaixo
+                }, currentPage);
+                y -= 15; // Move para a próxima linha abaixo
             });
         }
 
