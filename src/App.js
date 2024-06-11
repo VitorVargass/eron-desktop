@@ -44,15 +44,22 @@ function App() {
   const [totalPreco, setTotalPreco] = useState('0.00');
 
   const getUsers = async () => {
-    try {
-      //const res = await axios.get("http://localhost:8800");
-      const res = await axios.get(`${API_URL}/form`);
-      setUsers(res.data.sort((a, b) => (a.cliente > b.cliente ? 1 : -1)));
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      toast.error(error);
+  try {
+    const res = await axios.get(`${API_URL}/form`);
+    const data = res.data;
+    console.log(data);
+    // Verifica se data é um array antes de chamar sort
+    if (Array.isArray(data)) {
+      setUsers(data.sort((a, b) => (a.cliente > b.cliente ? 1 : -1)));
+    } else {
+      console.log("Dados recebidos não são um array:", data);
+      toast.error("Erro ao buscar usuários: dados inválidos recebidos.");
     }
-  };
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    toast.error("Erro ao buscar usuários: " + error.message);
+  }
+};
 
   useEffect(() => {
     if (isLoggedIn) {

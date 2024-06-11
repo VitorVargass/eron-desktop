@@ -1,6 +1,6 @@
 {
   "name": "react-desktop-heron",
-  "version": "6.0.0",
+  "version": "7.0.1",
   "private": true,
   "main": "public/electron.js",
   "type": "module",
