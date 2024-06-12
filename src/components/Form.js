@@ -15,7 +15,7 @@ const FormContainter = styled.form`
     background-color: #fff;
     padding: 20px; 
     box-shadow: 0px 0px 5px #ccc;
-    border-radius: 5px
+    border-radius: 5px;
 `;
 
 const InputArea = styled.div`
@@ -28,15 +28,15 @@ const Select = styled.select`
     padding:0 10px;
     border: 1px solid #bbb;
     border-radius: 5px;
-    height: 40px
-`
+    height: 40px;
+`;
 
 const Input = styled.input`
     width:120px;
     padding:0 10px;
     border: 1px solid #bbb;
     border-radius: 5px;
-    height: 40px
+    height: 40px;
 `;
 
 const Label = styled.label``;
@@ -58,17 +58,17 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
     const [telefone, setTelefone] = useState('');
     const [placa, setPlaca] = useState('');
     const [data, setData] = useState('');
-    const [totalPrice, setTotalPrice] = useState('0.00');
-    const [maoDeObra, setMaoDeObra] = useState('0.00');
+    const [totalPrice, setTotalPrice] = useState('0,00');
+    const [maoDeObra, setMaoDeObra] = useState('0,00');
 
     const API_URL = "http://localhost:8800";
 
     const calculateTotalPrice = useCallback(() => {
         const total = pecas.reduce((acc, peca) => {
-            const price = parseFloat(peca.preco.replace(',', '.'));
+            const price = parseFloat(peca.preco.replace('.', '').replace(',', '.'));
             return acc + (isNaN(price) ? 0 : price);
-        }, 0) + parseFloat(maoDeObra.replace(',', '.'));
-        return total.toFixed(2);
+        }, 0) + parseFloat(maoDeObra.replace('.', '').replace(',', '.'));
+        return formatPrice(total);
     }, [pecas, maoDeObra]);
 
     const handleOpenModal = () => {
@@ -79,29 +79,41 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
         setIsModalOpen(false);
     };
 
-    const handleFormatPrice = (id, valor) => {
-        if (typeof valor !== 'string') {
-            valor = '0.00';
+    const formatPrice = (value) => {
+        if (typeof value !== 'string') {
+            value = value.toString();
         }
-        valor = valor.replace(/[^0-9.,]+/g, '');
-        valor = valor.replace(',', '.');
-        const numericValue = parseFloat(valor);
-        if (!isNaN(numericValue)) {
-            valor = numericValue.toFixed(2);
-        } else {
-            valor = '0.00';
-            console.log("Mao de Obra não é numero!")
+        const number = parseFloat(value.replace(',', '.'));
+        if (isNaN(number)) {
+            return '0,00';
         }
-        return valor;
+        return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
     };
+
+
+    const handleFormatPrice = (value) => {
+        if (typeof value !== 'string') {
+            value = value.toString();
+        }
+        value = value.replace(/[^0-9,]+/g, '');
+        value = value.replace(',', '.');
+        const numericValue = parseFloat(value);
+        if (!isNaN(numericValue)) {
+            value = numericValue.toFixed(2).replace('.', ',');
+        } else {
+            value = '0,00';
+        }
+        return formatPrice(value);
+    };
+
 
     const handleAddPeca = () => {
         const novaPeca = {
             id: Math.random(),
             nome: "",
             quantidade: 1,
-            precoUnitario: "0.00",
-            preco: "0.00"
+            precoUnitario: "0,00",
+            preco: "0,00"
         };
         setPecas([...pecas, novaPeca]);
     };
@@ -120,13 +132,13 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
     };
 
     const calculateTotal = (precoUnitario, quantidade) => {
-        const total = parseFloat(precoUnitario.replace(',', '.')) * quantidade;
-        return total.toFixed(2);
+        const total = parseFloat(precoUnitario.replace('.', '').replace(',', '.')) * quantidade;
+        return formatPrice(total);
     };
 
     const handleBlurPeca = (id, campo, valor) => {
         if (campo === "precoUnitario") {
-            valor = handleFormatPrice(id, valor);
+            valor = handleFormatPrice(valor);
         }
         handleUpdatePeca(id, campo, valor);
     };
@@ -208,10 +220,10 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
 
         const user = ref.current;
         const pecasAsString = JSON.stringify(pecas);
-        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0 && peca.preco > 0);
+        const isAnyPecaValid = pecas.some(peca => peca.nome.trim() !== "" && peca.quantidade > 0 && parseFloat(peca.preco.replace('.', '').replace(',', '.')) > 0);
 
         const numeroTelefone = telefone.replace(/\D/g, '');
-        
+
         if (numeroTelefone.length !== 11) {
             toast.warn("O telefone deve ter 11 dígitos.");
             return;
@@ -264,7 +276,7 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
             setData("");
             user.status.value = "";
             setPecas([]);
-            setMaoDeObra('0.00');
+            setMaoDeObra('0,00');
             setOnEdit(null);
             getUsers();
         } catch (error) {
@@ -354,7 +366,7 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
                                     placeholder="Digite o preco da peça"
                                     className="input-peca"
                                 />
-                                <span className="price-display">{peca.preco || 0}</span>
+                                <span className="price-display">{peca.preco}</span>
                                 <button onClick={() => handleDecrementQuantidade(peca.id)} className="buttons-quant">-</button>
                                 <span className="number">{peca.quantidade}</span>
                                 <button onClick={() => handleIncrementQuantidade(peca.id)} className="buttons-quant">+</button>
@@ -364,10 +376,11 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
                         <div>
                             <label>Mão de Obra:</label>
                             <input
-                                type="number"
+                                type="text"
                                 value={maoDeObra}
                                 name="maoDeObra"
                                 onChange={(e) => setMaoDeObra(e.target.value)}
+                                onBlur={(e) => setMaoDeObra(handleFormatPrice(e.target.value))}
                                 placeholder="Digite o valor da mão de obra"
                                 className="input-peca"
                             />

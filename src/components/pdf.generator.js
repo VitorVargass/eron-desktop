@@ -13,13 +13,21 @@ const loadPdfTemplate = async () => {
     }
 };
 
+const formatPrice = (value) => {
+    const number = parseFloat(value.toString().replace(/\./g, '').replace(',', '.'));
+    if (isNaN(number)) {
+        return '0,00';
+    }
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+};
+
 const generatePDF = async (selectedItem) => {
     let pdfDoc;
     try {
         // Carrega o PDF modelo
         pdfDoc = await loadPdfTemplate();
         let pages = pdfDoc.getPages();
-        let firstPage = pdfDoc.getPages()[0];
+        let firstPage = pages[0];
         let font = await pdfDoc.embedFont(StandardFonts.Helvetica);
         let { height } = firstPage.getSize();
 
@@ -90,7 +98,7 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(selectedItem.totalPreco || 'N/A', {
+        firstPage.drawText(formatPrice(selectedItem.totalPreco) || 'N/A', {
             x: 115,
             y: height - 750,
             size: 17,
@@ -98,13 +106,20 @@ const generatePDF = async (selectedItem) => {
             color: rgb(0, 0, 0),
         });
 
-        firstPage.drawText(selectedItem.maoDeObra  ? parseFloat(selectedItem.maoDeObra).toFixed(2) : '0.00' || 'N/A', {
+        firstPage.drawText(formatPrice(selectedItem.maoDeObra ? selectedItem.maoDeObra : '0,00') || 'N/A', {
             x: 430,
             y: height - 750,
             size: 17,
             font,
             color: rgb(0, 0, 0),
         });
+
+        // Calcular custo de peças
+        const custoPecas = formatPrice(
+            (parseFloat(selectedItem.totalPreco.replace(/\./g, '').replace(',', '.')) -
+             parseFloat(selectedItem.maoDeObra.replace(/\./g, '').replace(',', '.')))
+            .toFixed(2)
+        );
 
         // Adicionar cabeçalho da tabela de peças
         firstPage.drawText('Produto', {
@@ -151,8 +166,8 @@ const generatePDF = async (selectedItem) => {
             let linesOnCurrentPage = 0;  // Contador de linhas na página atual
 
             selectedItem.pecas.forEach((peca, index) => {
-                const precoFormatted = parseFloat(peca.preco) || 0;
-                const precoUnitarioFormat = parseFloat(peca.precoUnitario) || 0;
+                const precoFormatted = formatPrice(peca.preco || '0.00');
+                const precoUnitarioFormat = formatPrice(peca.precoUnitario || '0.00');
 
                 const isFirstPage = currentPage === firstPage;
                 const maxLinesPerPage = isFirstPage ? linesPerPageFirst : linesPerPageSubsequent;
@@ -205,7 +220,7 @@ const generatePDF = async (selectedItem) => {
                     font,
                     color: rgb(0, 0, 0),
                 }, currentPage);
-                drawText(`R$ ${precoUnitarioFormat.toFixed(2)}`, {
+                drawText(`R$ ${precoUnitarioFormat}`, {
                     x: 380,  // Alinha com o cabeçalho 'Unid.'
                     y: y,
                     size: 12,
@@ -219,7 +234,7 @@ const generatePDF = async (selectedItem) => {
                     font,
                     color: rgb(0, 0, 0),
                 }, currentPage);
-                drawText(`R$ ${precoFormatted.toFixed(2)}`, {
+                drawText(`R$ ${precoFormatted}`, {
                     x: 520,  // Alinha com o cabeçalho 'Preco'
                     y: y,
                     size: 12,

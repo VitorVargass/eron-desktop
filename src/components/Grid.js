@@ -3,7 +3,7 @@ import axios from "axios";
 import styled from "styled-components";
 import { FaTrash, FaEdit, FaTools, FaRegWindowClose } from "react-icons/fa";
 import { toast } from "react-toastify";
-import {printPDF, downloadPDF } from './pdf.generator.js'; 
+import { printPDF, downloadPDF } from './pdf.generator.js';
 import Modal from 'react-modal';
 import '../styles/modal.css';
 import '../styles/modal-peca.js';
@@ -78,7 +78,6 @@ const EditIcon = styled(FaEdit)`
   }
 `;
 
-
 const DeleteIcon = styled(FaTrash)`
   font-size: 20px;
   cursor: pointer;
@@ -86,7 +85,6 @@ const DeleteIcon = styled(FaTrash)`
     color: red;
   }
 `;
-
 
 const ToolsIcon = styled(FaTools)`
   font-size: 20px;
@@ -150,8 +148,7 @@ const StyledTr = styled.tr`
   }
 `;
 
-
-const ConfirmationModal = ({ isOpen, onClose, onConfirm, itemToDelete}) => (
+const ConfirmationModal = ({ isOpen, onClose, onConfirm, itemToDelete }) => (
     <Modal
         isOpen={isOpen}
         onRequestClose={onClose}
@@ -168,7 +165,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, itemToDelete}) => (
     </Modal>
 );
 
-const ConfirmationModalEdit = ({ isOpen, onClose, onConfirm, itemToEdit}) => (
+const ConfirmationModalEdit = ({ isOpen, onClose, onConfirm, itemToEdit }) => (
     <Modal
         isOpen={isOpen}
         onRequestClose={onClose}
@@ -185,13 +182,21 @@ const ConfirmationModalEdit = ({ isOpen, onClose, onConfirm, itemToEdit}) => (
     </Modal>
 );
 
-const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
+const Grid = ({ users, setUsers, setOnEdit, totalPreco }) => {
+
+    const formatPrice = (value) => {
+        const number = parseFloat(value.toString().replace(/\./g, '').replace(',', '.'));
+        if (isNaN(number)) {
+            return '0,00';
+        }
+        return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(number);
+    };
 
     // Verificação de segurança para garantir que `users` não seja undefined
-  if (!users) {
-    console.error("Erro: `users` está indefinido, verifique conexão com backend!");
-    users = [];
-  }
+    if (!users) {
+        console.error("Erro: `users` está indefinido, verifique conexão com backend!");
+        users = [];
+    }
 
     const [modalIsOpen, setIsOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -205,12 +210,12 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = (event) => {
-    setSearchQuery(event.target.value.toLowerCase());
-  };
+        setSearchQuery(event.target.value.toLowerCase());
+    };
 
-  const filteredUsers = searchQuery.length > 0
-    ? users.filter((user) => user.cliente.toLowerCase().includes(searchQuery))
-    : users;
+    const filteredUsers = searchQuery.length > 0
+        ? users.filter((user) => user.cliente.toLowerCase().includes(searchQuery))
+        : users;
 
     // Abre Modal de Pecas do Grid
     function openModal(item) {
@@ -263,7 +268,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
         toast.info(`Item selecionado: ${item.cliente}`);
     };
 
-    
+
     const handleDelete = async (id) => {
         try {
             const { data } = await axios.delete(`${API_URL}/${id}`);
@@ -299,16 +304,16 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
         let pecasArray;
 
         if (typeof pecasString === 'string') {
-        try{
-        pecasArray = JSON.parse(pecasString);
-        } catch(error) {
-        console.error("Erro ao analisar JSON:", error);
-        return <p>Erro ao analisar dados das peças.</p>;
-        } 
-    } else {
-        pecasArray = pecasString;
-    }
-    
+            try {
+                pecasArray = JSON.parse(pecasString);
+            } catch (error) {
+                console.error("Erro ao analisar JSON:", error);
+                return <p>Erro ao analisar dados das peças.</p>;
+            }
+        } else {
+            pecasArray = pecasString;
+        }
+
         // Se pecasArray é definido e é um array, então mapeia os itens para a tabela
         if (pecasArray && Array.isArray(pecasArray)) {
             return (
@@ -327,8 +332,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
                                     <StyledTd>{peca.quantidade}</StyledTd>
-                                    <StyledTd>{peca.precoUnitario ? parseFloat(peca.precoUnitario).toFixed(2) : '0.00'}</StyledTd>
-                                    <StyledTd>{peca.preco ? parseFloat(peca.preco).toFixed(2) : '0.00'}</StyledTd>
+                                    <StyledTd>{peca.precoUnitario ? formatPrice(peca.precoUnitario) : '0,00'}</StyledTd>
+                                    <StyledTd>{peca.preco ? formatPrice(peca.preco) : '0,00'}</StyledTd>
                                 </StyledTr>
                             ))}
                         </ScrollableTbody>
@@ -342,18 +347,16 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     };
 
     return (
+        <div className="centralizar-grid">
+            <SearchBarContainer>
+                <SearchInput
+                    type="text"
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    placeholder="Buscar por Cliente..."
+                />
+            </SearchBarContainer>
 
-    <div className="centralizar-grid">
-        <SearchBarContainer>
-        <SearchInput
-          type="text"
-          value={searchQuery}
-          onChange={handleSearch}
-          placeholder="Buscar por Cliente..."
-        />
-      </SearchBarContainer>
-
-      
             <Table>
                 <Thead>
                     <Tr>
@@ -372,7 +375,6 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                     </Tr>
                 </Thead>
                 <Tbody>
-
                     {filteredUsers.map((item, i) => (
                         <Tr key={i}>
                             <Td width="20%">{item.cliente}</Td>
@@ -382,7 +384,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <Td width="10%">{item.ano}</Td>
                             <Td width="10%">{item.placa}</Td>
                             <Td width="10%">{item.data}</Td>
-                            <Td width="10%">{item.totalPreco}</Td>
+                            <Td width="10%">{formatPrice(item.totalPreco)}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
                                 <EditIcon onClick={() => openConfirmModalEdit(item)} />
@@ -396,14 +398,12 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                         </Tr>
                     ))}
                 </Tbody>
-            </Table> 
-            
-            
+            </Table>
+
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
                 contentLabel="Detalhes do Cliente"
-
                 overlayClassName="modal-overlay"
                 className="modal-content"
             >
@@ -423,30 +423,28 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <li className="info-modal">Placa: {selectedItem.placa}</li>
                                 <li className="info-modal">Data: {selectedItem.data}</li>
                                 <li className="info-modal">Status: {selectedItem.status}</li>
-                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra ? parseFloat(selectedItem.maoDeObra).toFixed(2) : '0.00'}</li>
-                                <li className="info-modal">Custo de pecas: { (selectedItem.totalPreco - selectedItem.maoDeObra).toFixed(2) }</li>
-                                <li className="info-modal">Total: {selectedItem.totalPreco}</li>
+                                <li className="info-modal">Mão de Obra: {formatPrice(selectedItem.maoDeObra)}</li>
+                                <li className="info-modal">Custo de pecas: {formatPrice((parseFloat(selectedItem.totalPreco.replace(/\./g, '').replace(',', '.')) - parseFloat(selectedItem.maoDeObra.replace(/\./g, '').replace(',', '.'))).toFixed(2)
+                                    .toString()
+                                    .replace('.', ',')
+                                    )
+                                }</li>
+                                <li className="info-modal">Total: {formatPrice(selectedItem.totalPreco)}</li>
                             </ul>
                         </div>
-                        
                         <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
-                            <button className="btn-impressao"onClick={() => downloadPDF(selectedItem)}>Fazer Dowload de Ordem de Serviço</button>
-                            <button className="btn-impressao"onClick={() => printPDF(selectedItem)}>Imprimir Ordem de Serviço</button>
+                            <button className="btn-impressao" onClick={() => downloadPDF(selectedItem)}>Fazer Dowload de Ordem de Serviço</button>
+                            <button className="btn-impressao" onClick={() => printPDF(selectedItem)}>Imprimir Ordem de Serviço</button>
                         </div>
-                        
                     </div>
-                    
                 )}
-
             </Modal>
-            
-            
+
             <ConfirmationModal isOpen={confirmModalOpen} onClose={closeConfirmModal} onConfirm={handleDeleteConfirmed} itemToDelete={itemToDelete} />
             <ConfirmationModalEdit isOpen={confirmModalEditOpen} onClose={closeConfirmModalEdit} onConfirm={handleEditConfirmed} itemToEdit={itemToEdit} />
         </div>
     );
-
 };
 
 export default Grid;
