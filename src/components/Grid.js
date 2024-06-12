@@ -3,7 +3,7 @@ import axios from "axios";
 import styled from "styled-components";
 import { FaTrash, FaEdit, FaTools, FaRegWindowClose } from "react-icons/fa";
 import { toast } from "react-toastify";
-import jsPDF from 'jspdf';
+import {printPDF, downloadPDF } from './pdf.generator.js'; 
 import Modal from 'react-modal';
 import '../styles/modal.css';
 import '../styles/modal-peca.js';
@@ -298,9 +298,17 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
     const formatPecasTable = (pecasString) => {
         let pecasArray;
 
+        if (typeof pecasString === 'string') {
+        try{
         pecasArray = JSON.parse(pecasString);
-
-
+        } catch(error) {
+        console.error("Erro ao analisar JSON:", error);
+        return <p>Erro ao analisar dados das peças.</p>;
+        } 
+    } else {
+        pecasArray = pecasString;
+    }
+    
         // Se pecasArray é definido e é um array, então mapeia os itens para a tabela
         if (pecasArray && Array.isArray(pecasArray)) {
             return (
@@ -310,6 +318,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <tr>
                                 <StyledTh>Produto</StyledTh>
                                 <StyledTh>Quantidade</StyledTh>
+                                <StyledTh>Unidade</StyledTh>
                                 <StyledTh>Preco</StyledTh>
                             </tr>
                         </StyledThead>
@@ -318,7 +327,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <StyledTr key={index}>
                                     <StyledTd>{peca.nome}</StyledTd>
                                     <StyledTd>{peca.quantidade}</StyledTd>
-                                    <StyledTd>{peca.preco}</StyledTd>
+                                    <StyledTd>{peca.precoUnitario ? parseFloat(peca.precoUnitario).toFixed(2) : '0.00'}</StyledTd>
+                                    <StyledTd>{peca.preco ? parseFloat(peca.preco).toFixed(2) : '0.00'}</StyledTd>
                                 </StyledTr>
                             ))}
                         </ScrollableTbody>
@@ -330,113 +340,6 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
             return <p>Dados das peças não estão no formato de array.</p>;
         }
     };
-
-    //PDF generator 
-
-    const generatePDF = () => {
-        const doc = new jsPDF();
-    
-        // Configurando o título
-        doc.setFontSize(20);
-        doc.text('Ordem de Serviço', 105, 20, null, null, 'center');
-    
-        // Adicionando informações do cliente
-        doc.setFontSize(12);
-        doc.text(`Cliente: ${selectedItem.cliente}`, 20, 30);
-        doc.text(`Telefone: ${selectedItem.telefone}`, 20, 40);
-        doc.text(`Marca: ${selectedItem.marca}`, 20, 50);
-        doc.text(`Modelo: ${selectedItem.modelo}`, 20, 60);
-        doc.text(`Ano: ${selectedItem.ano}`, 20, 70);
-        doc.text(`Placa: ${selectedItem.placa}`, 20, 80);
-        doc.text(`Data: ${selectedItem.data}`, 20, 90);
-        doc.text(`Status: ${selectedItem.status}`, 20, 100);
-    
-        // Adicionar uma linha divisória
-        doc.setDrawColor(0);
-        doc.setFillColor(192, 192, 192);
-        doc.rect(20, 105, 170, 0.5, 'F');
-    
-        // Adicionar cabeçalho da tabela de peças
-        doc.text('Produto', 20, 115);
-        doc.text('Quantidade', 90, 115);
-        doc.text('Preço', 160, 115);
-    
-
-
-        let pecasArray = selectedItem.pecas;
-
-        // Verifica se pecasArray é uma string e tenta parsear para JSON
-        if (typeof pecasArray === 'string') {
-            try {
-                pecasArray = JSON.parse(pecasArray);
-            } catch (error) {
-                console.error("Erro ao parsear peças:", error);
-                toast.error("Erro ao processar dados das peças.");
-                return;
-            }
-        }
-
-         // Agora usa pecasArray como um array
-         if (Array.isArray(pecasArray)) {
-            let y = 125;
-            pecasArray.forEach(peca => {
-                let precoFormatted = peca.preco;
-    
-                // Checa se preco é uma string e tenta converter para número
-                if (typeof precoFormatted === 'string') {
-                    precoFormatted = parseFloat(precoFormatted);
-                }
-    
-                // Só tenta usar toFixed se precoFormatted for um número
-                if (typeof precoFormatted === 'number') {
-                    doc.text(peca.nome, 20, y);
-                    doc.text(`${peca.quantidade}`, 90, y);
-                    doc.text(`R$ ${precoFormatted.toFixed(2)}`, 160, y);
-                    y += 10;
-                } else {
-                    console.error("Preço não é um número:", precoFormatted);
-                    toast.error("Erro ao formatar preço.");
-                }
-            });
-            doc.save(`${selectedItem.cliente}.pdf`);
-        } else {
-            console.error("Peças não estão em formato de array");
-            toast.error("Dados das peças não estão no formato correto.");
-        }
-
-        return doc;
-    };
-
-    //IMPRIMIR PDF 
-
-     const printPDF = () => {
-         const doc = generatePDF(); // Esta função retorna a instância jsPDF
-    
-         if (doc) {
-            // Gera o PDF como um Blob
-            const pdfBlob = doc.output('blob');
-    
-            // Cria um URL para o Blob
-            const blobUrl = URL.createObjectURL(pdfBlob);
-    
-            // Abre uma nova janela e carrega o PDF para impressão
-            const printWindow = window.open('', '_blank');
-            if (printWindow) {
-                printWindow.document.write(`<iframe src="${blobUrl}" frameborder="0" style="border:0; width:100%; height:100%;" allowfullscreen></iframe>`);
-                
-                // Aguarda o carregamento da nova janela e dispara a impressão
-                printWindow.onload = function() {
-                    printWindow.print();
-                };
-            } else {
-                console.error('Failed to open print window.');
-            }
-        } else {
-            console.error('Failed to generate PDF document.');
-        }
-     }
-
-
 
     return (
 
@@ -477,8 +380,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                             <Td width="15%">{item.marca}</Td>
                             <Td width="15%">{item.modelo}</Td>
                             <Td width="10%">{item.ano}</Td>
-                            <Td width="10%">{item.data}</Td>
                             <Td width="10%">{item.placa}</Td>
+                            <Td width="10%">{item.data}</Td>
                             <Td width="10%">{item.totalPreco}</Td>
                             <Td width="15%">{item.status}</Td>
                             <Td width="5%" $alignCenter >
@@ -499,7 +402,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
             <Modal
                 isOpen={modalIsOpen}
                 onRequestClose={closeModal}
-                contentLabel="Detalhes do Item"
+                contentLabel="Detalhes do Cliente"
 
                 overlayClassName="modal-overlay"
                 className="modal-content"
@@ -520,7 +423,7 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                                 <li className="info-modal">Placa: {selectedItem.placa}</li>
                                 <li className="info-modal">Data: {selectedItem.data}</li>
                                 <li className="info-modal">Status: {selectedItem.status}</li>
-                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra}</li>
+                                <li className="info-modal">Mão de Obra: {selectedItem.maoDeObra ? parseFloat(selectedItem.maoDeObra).toFixed(2) : '0.00'}</li>
                                 <li className="info-modal">Custo de pecas: { (selectedItem.totalPreco - selectedItem.maoDeObra).toFixed(2) }</li>
                                 <li className="info-modal">Total: {selectedItem.totalPreco}</li>
                             </ul>
@@ -528,8 +431,8 @@ const Grid = ({ users, setUsers, setOnEdit, totalPreco}) => {
                         
                         <div style={{ flex: '1', flexDirection: 'column', justifyContent: 'center' }}>
                             {formatPecasTable(selectedItem.pecas)}
-                            <button className="btn-impressao"onClick={generatePDF}>Fazer Dowload de Ordem de Serviço</button>
-                            <button className="btn-impressao"onClick={printPDF}>Imprimir Ordem de Serviço</button>
+                            <button className="btn-impressao"onClick={() => downloadPDF(selectedItem)}>Fazer Dowload de Ordem de Serviço</button>
+                            <button className="btn-impressao"onClick={() => printPDF(selectedItem)}>Imprimir Ordem de Serviço</button>
                         </div>
                         
                     </div>

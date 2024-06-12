@@ -6,7 +6,6 @@ import { FaTools, FaTrash } from "react-icons/fa";
 import Modal from '../styles/modal-peca.js';
 import '../styles/modal.css';
 
-
 const FormContainter = styled.form`
     width: 82%;
     display: flex;
@@ -52,17 +51,17 @@ const Button = styled.button`
     height: 42px;
 `;
 
-const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
+const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco }) => {
     const ref = useRef();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [pecas, setPecas] = useState([]);
     const [telefone, setTelefone] = useState('');
+    const [placa, setPlaca] = useState('');
+    const [data, setData] = useState('');
     const [totalPrice, setTotalPrice] = useState('0.00');
     const [maoDeObra, setMaoDeObra] = useState('0.00');
 
-    
     const API_URL = "http://localhost:8800";
-
 
     const calculateTotalPrice = useCallback(() => {
         const total = pecas.reduce((acc, peca) => {
@@ -71,19 +70,19 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         }, 0) + parseFloat(maoDeObra.replace(',', '.'));
         return total.toFixed(2);
     }, [pecas, maoDeObra]);
-    
 
-    // Função para abrir o modal
     const handleOpenModal = () => {
         setIsModalOpen(true);
     };
 
-    // Função para fechar o modal
     const handleCloseModal = () => {
         setIsModalOpen(false);
     };
-    
+
     const handleFormatPrice = (id, valor) => {
+        if (typeof valor !== 'string') {
+            valor = '0.00';
+        }
         valor = valor.replace(/[^0-9.,]+/g, '');
         valor = valor.replace(',', '.');
         const numericValue = parseFloat(valor);
@@ -98,23 +97,35 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
 
     const handleAddPeca = () => {
         const novaPeca = {
-            id: Math.random(), // em um app real, o ID seria gerado de outra forma
+            id: Math.random(),
             nome: "",
             quantidade: 1,
+            precoUnitario: "0.00",
             preco: "0.00"
         };
         setPecas([...pecas, novaPeca]);
     };
 
-
     const handleUpdatePeca = (id, campo, valor) => {
-        setPecas(pecas.map(peca =>
-            peca.id === id ? { ...peca, [campo]: valor } : peca
-        ));
+        setPecas(pecas.map(peca => {
+            if (peca.id === id) {
+                let updatedPeca = { ...peca, [campo]: valor };
+                if (campo === 'precoUnitario' || campo === 'quantidade') {
+                    updatedPeca.preco = calculateTotal(updatedPeca.precoUnitario, updatedPeca.quantidade);
+                }
+                return updatedPeca;
+            }
+            return peca;
+        }));
+    };
+
+    const calculateTotal = (precoUnitario, quantidade) => {
+        const total = parseFloat(precoUnitario.replace(',', '.')) * quantidade;
+        return total.toFixed(2);
     };
 
     const handleBlurPeca = (id, campo, valor) => {
-        if (campo === "preco") {
+        if (campo === "precoUnitario") {
             valor = handleFormatPrice(id, valor);
         }
         handleUpdatePeca(id, campo, valor);
@@ -132,10 +143,30 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         handleUpdatePeca(id, "quantidade", Math.max(pecas.find(peca => peca.id === id).quantidade - 1, 1));
     };
 
+    const handleTelefoneChange = (e) => {
+        let value = e.target.value;
+        value = value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2'); // Coloca parênteses em volta dos dois primeiros dígitos
+        value = value.replace(/(\d)(\d{4})$/, '$1-$2'); // Coloca hífen entre o quarto e o quinto dígitos
+        setTelefone(value);
+    };
+
+    const handlePlacaChange = (e) => {
+        let value = e.target.value.toUpperCase();
+        value = value.replace(/[^A-Z0-9]/g, ''); // Remove tudo que não for letra ou número
+        value = value.replace(/^([A-Z]{3})(\d)/, '$1-$2'); // Coloca hífen entre os três primeiros caracteres e os números
+        setPlaca(value);
+    };
+
+    const handleDataChange = (e) => {
+        let value = e.target.value;
+        value = value.replace(/\D/g, ''); // Remove tudo que não for dígito
+        value = value.replace(/^(\d{2})(\d)/g, '$1/$2'); // Coloca a primeira barra
+        value = value.replace(/(\d{2})(\d)/, '$1/$2'); // Coloca a segunda barra
+        setData(value);
+    };
 
     useEffect(() => {
-
-
         if (onEdit) {
             const user = ref.current;
 
@@ -144,27 +175,28 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             user.marca.value = onEdit.marca;
             user.modelo.value = onEdit.modelo;
             user.ano.value = onEdit.ano;
-            user.placa.value = onEdit.placa;
-            user.data.value = onEdit.data;
+            setPlaca(onEdit.placa);
+            setData(onEdit.data);
             user.status.value = onEdit.status;
-            
-            if (onEdit.maoDeObra) {
-                setMaoDeObra(onEdit.maoDeObra); // Aqui está a correção
+
+            setMaoDeObra(onEdit.maoDeObra);
+
+            if (onEdit.pecas) {
+                try {
+                    const pecasArray = typeof onEdit.pecas === 'string' ? JSON.parse(onEdit.pecas) : onEdit.pecas;
+                    setPecas(pecasArray);
+                } catch (error) {
+                    console.error("Erro ao parsear pecas:", error);
+                    toast.error("Erro ao processar dados das peças.");
+                    setPecas([]); // Define um estado seguro padrão
+                }
             } else {
-                setMaoDeObra('0.00'); // Aqui está a correção
+                setPecas([]);
             }
-            
-            if (onEdit.pecas && typeof onEdit.pecas === 'string') {
-                setPecas(JSON.parse(onEdit.pecas));
-            }   
-                
-            
         }
     }, [onEdit]);
 
-    //controla o estado do calculo de preco total com useEffect
     useEffect(() => {
-        // Este useEffect reage apenas à mudança nas peças
         setTotalPrice(calculateTotalPrice());
     }, [pecas, maoDeObra, calculateTotalPrice]);
 
@@ -174,13 +206,9 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         const totalPreco = calculateTotalPrice();
         setTotalPreco(totalPreco);
 
-
-        
         const user = ref.current;
         const pecasAsString = JSON.stringify(pecas);
         const isAnyPecaValid = pecas.some(peca => peca.nome.trim() && peca.quantidade > 0 && peca.preco > 0);
-
-        //setIsSaveEnabled(isAnyPecaValid);
 
         const numeroTelefone = telefone.replace(/\D/g, '');
         
@@ -199,11 +227,11 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
             !user.status.value ||
             !maoDeObra) {
             return toast.warn("Preencha todos os campos!");
-        };
+        }
         if (!isAnyPecaValid) {
             toast.warn("Adicione pelo menos uma peça válida.");
             return;
-          }
+        }
 
         const dataToSubmit = {
             cliente: user.cliente.value,
@@ -220,35 +248,31 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
         };
 
         try {
-        const response = onEdit ?
+            const response = onEdit
+                ? await axios.put(`${API_URL}/${onEdit.id}`, dataToSubmit)
+                : await axios.post(`${API_URL}/`, dataToSubmit);
 
-            // await axios.put(`http://localhost:8800/${onEdit.id}`, dataToSubmit) :
-            // await axios.post("http://localhost:8800/", dataToSubmit);
-             await axios.put(`${API_URL}/${onEdit.id}`, dataToSubmit) :
-             await axios.post(`${API_URL}/`, dataToSubmit);
+            toast.success("Dados salvos com sucesso!");
+            console.log('Resposta da API:', response.data);
 
-        toast.success("Dados salvos com sucesso!");
-        console.log('Resposta da API:', response.data);
-
-        // Limpa o formulário e estados depois de salvar
-        user.cliente.value = "";
-        user.telefone.value = "";
-        user.marca.value = "";
-        user.modelo.value = "";
-        user.ano.value = "";
-        user.placa.value = "";
-        user.data.value = "";
-        user.status.value = "";
-        setPecas([]);
-        setMaoDeObra('0.00');
-        setOnEdit(null);
-        getUsers();
-    } catch (error) {
-        console.error('Erro ao enviar dados:', error);
-        toast.error("Erro ao salvar os dados. Verifique o console para mais detalhes.");
-    }
-    setTelefone('');
-};
+            user.cliente.value = "";
+            user.telefone.value = "";
+            user.marca.value = "";
+            user.modelo.value = "";
+            user.ano.value = "";
+            setPlaca("");
+            setData("");
+            user.status.value = "";
+            setPecas([]);
+            setMaoDeObra('0.00');
+            setOnEdit(null);
+            getUsers();
+        } catch (error) {
+            console.error('Erro ao enviar dados:', error);
+            toast.error("Erro ao salvar os dados. Verifique o console para mais detalhes.");
+        }
+        setTelefone('');
+    };
 
     return (
         <div className="centralizar">
@@ -260,10 +284,11 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                 <InputArea>
                     <Label>Telefone:</Label>
                     <Input
-                    value={telefone} 
-                    onChange={(e) => setTelefone(e.target.value)} 
-                    placeholder="Digite o telefone" 
-                    name="telefone" />
+                        value={telefone}
+                        onChange={handleTelefoneChange}
+                        placeholder="Digite o telefone"
+                        name="telefone"
+                    />
                 </InputArea>
                 <InputArea>
                     <Label>Marca:</Label>
@@ -275,30 +300,43 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                 </InputArea>
                 <InputArea>
                     <Label>Ano:</Label>
-                    <Input name="ano" placeholder="Digite o ano"/>
+                    <Input name="ano" placeholder="Digite o ano" />
                 </InputArea>
                 <InputArea>
                     <Label>Placa:</Label>
-                    <Input name="placa" type="text" placeholder="Digite a placa"/>
+                    <Input
+                        value={placa}
+                        onChange={handlePlacaChange}
+                        placeholder="Digite a placa"
+                        name="placa"
+                        type="text"
+                    />
                 </InputArea>
                 <InputArea>
                     <Label>Data:</Label>
-                    <Input name="data" type="text" placeholder="Digite a data"/>
+                    <Input
+                        value={data}
+                        onChange={handleDataChange}
+                        placeholder="Digite a data"
+                        name="data"
+                        type="text"
+                    />
                 </InputArea>
                 <InputArea>
                     <Label>Status:</Label>
                     <Select name="status" >
-                        <option disabled >Selecione</option>
+                        <option disabled>Selecione</option>
                         <option>Finalizado</option>
                         <option>Na oficina</option>
                         <option>Aguardando Prorietário</option>
                     </Select>
                 </InputArea>
-                <Button type="button" onClick={handleOpenModal} name="pecas"><FaTools/></Button>
+                <Button type="button" onClick={handleOpenModal} name="pecas"><FaTools /></Button>
                 <Button type="submit">SALVAR</Button>
-            </FormContainter> {isModalOpen && (
+            </FormContainter>
+            {isModalOpen && (
                 <Modal>
-                <div className="modal-peca" >
+                    <div className="modal-peca">
                         {pecas.map(peca => (
                             <div key={peca.id}>
                                 <input
@@ -310,18 +348,17 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                                 />
                                 <input
                                     type="text"
-                                    value={peca.preco}
-                                    onChange={(e) => handleUpdatePeca(peca.id, "preco", e.target.value)}
-                                    onBlur={(e) => handleBlurPeca(peca.id, "preco", e.target.value)}
+                                    value={peca.precoUnitario}
+                                    onChange={(e) => handleUpdatePeca(peca.id, "precoUnitario", e.target.value)}
+                                    onBlur={(e) => handleBlurPeca(peca.id, "precoUnitario", e.target.value)}
                                     placeholder="Digite o preco da peça"
                                     className="input-peca"
                                 />
-                                
+                                <span className="price-display">{peca.preco || 0}</span>
                                 <button onClick={() => handleDecrementQuantidade(peca.id)} className="buttons-quant">-</button>
                                 <span className="number">{peca.quantidade}</span>
                                 <button onClick={() => handleIncrementQuantidade(peca.id)} className="buttons-quant">+</button>
-                                <span onClick={() => handleRemovePeca(peca.id)} className="buttons-del" ><FaTrash/></span>
-                                
+                                <span onClick={() => handleRemovePeca(peca.id)} className="buttons-del"><FaTrash /></span>
                             </div>
                         ))}
                         <div>
@@ -336,16 +373,14 @@ const Form = ({ getUsers, onEdit, setOnEdit, setTotalPreco}) => {
                             />
                         </div>
                         <div className="buttons-low">
-                        <button onClick={handleAddPeca} className="add-button">Adicionar Peça</button>
-                        <button className="add-button" onClick={handleCloseModal} >Concluir</button>
+                            <button onClick={handleAddPeca} className="add-button">Adicionar Peça</button>
+                            <button className="add-button" onClick={handleCloseModal} >Concluir</button>
                         </div>
                     </div>
-              </Modal>
+                </Modal>
             )}
         </div>
     );
 };
-
-
 
 export default Form;
